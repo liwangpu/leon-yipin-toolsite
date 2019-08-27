@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 
 namespace ToolSite
 {
@@ -47,6 +48,18 @@ namespace ToolSite
             }
 
             app.UseStaticFiles();
+            if (!Directory.Exists(env.WebRootPath))
+            {
+                if (string.IsNullOrEmpty(env.WebRootPath))
+                {
+                    env.WebRootPath = Path.Combine(env.ContentRootPath, "wwwroot");
+                }
+                Directory.CreateDirectory(env.WebRootPath);
+            }
+            var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
+            if (!Directory.Exists(tmpFolder))
+                Directory.CreateDirectory(tmpFolder);
+
             app.UseCookiePolicy();
 
             app.UseMvc(routes =>

@@ -4,11 +4,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
+using Microsoft.AspNetCore.Hosting;
 
 namespace ToolSite.Controllers
 {
     public class OrdersController : Controller
     {
+        private readonly IHostingEnvironment env;
+
+        public OrdersController(IHostingEnvironment env)
+        {
+            this.env = env;
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -22,9 +30,7 @@ namespace ToolSite.Controllers
         [HttpPost]
         public async Task<PartialViewResult> ExtractAreaHandle()
         {
-            var tmpFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tmp");
-            if (!Directory.Exists(tmpFolder))
-                Directory.CreateDirectory(tmpFolder);
+            var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
             var orderFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var extractArea = Request.Form["area"];
             var files = Request.Form.Files;
