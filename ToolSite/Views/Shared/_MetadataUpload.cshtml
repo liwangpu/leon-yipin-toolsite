@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+    </style>
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/dojo/1.10.4/dijit/themes/claro/claro.css" media="screen">
+    <style>
+        div.page {
+            width: 100%;
+            height: 100%;
+            padding: 1rem;
+        }
+
+        div.upload-box {
+            width: 100%;
+            padding: .8rem;
+            border: 1px solid #D0D0D0;
+            border-radius: 4px;
+        }
+
+        div.form-item {
+            display: inline-block;
+        }
+
+            div.form-item > label {
+                display: inline-block;
+                width: 80px;
+            }
+
+        div.metadata-des {
+            width: 100%;
+            padding: .8rem;
+            border: 1px solid #D0D0D0;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+    </style>
+    @RenderSection("styles", false)
+    <script>
+        dojoConfig = {
+            parseOnLoad: true
+        };
+    </script>
+    <script src="//ajax.googleapis.com/ajax/libs/dojo/1.14.1/dojo/dojo.js"></script>
+</head>
+<body class="claro">
+    <div class="page">
+        <div class="upload-box">
+            @RenderSection("uploadbox", false)
+        </div>
+        <div class="metadata-des">
+            @RenderSection("description", false)
+        </div>
+        @RenderBody()
+    </div>
+    @RenderSection("scripts", required: false)
+</body>
+</html>
