@@ -15,12 +15,6 @@
 
 
             function processingMetadata() {
-                //var wuploadBoxFrom = registry.byId("uploadBoxForm");
-                //var uploadBoxFrom = dom.byId("uploadBoxForm");
-
-                //console.log(111, wuploadBoxFrom, uploadBoxFrom);
-                //var formData = wuploadBoxFrom.getValues();
-                //console.log(1, formData);
 
 
                 iframe("/Orders/ExtractAreaHandle", {
@@ -32,27 +26,6 @@
                     console.log('error', err);
                 });
 
-                //iframe("/Orders/ExtractArea", {
-                //    data: formData,
-                //    handleAs: "json"
-                //}).then(function (data) {
-                //    console.log('res', data);
-                //}, function (err) {
-                //    //console.log('error', err);
-                //});
-
-                //xhr("/Orders/ExtractArea", {
-                //    data: formData,
-                //    method: "POST",
-                //    handleAs: "json",
-                //    headers: {
-                //        'Content-Type': 'multipart/form-data'
-                //    }
-                //}).then(function (data) {
-                //    console.log('res', data);
-                //}, function (err) {
-                //    console.log('err', err);
-                //});
 
             }//processingMetadata
 
@@ -68,8 +41,8 @@
             <input type="file" data-dojo-type="dojox/form/Uploader" label="选取文件" name="orderFile" id="orderFile" accept=".xlsx" />
         </div>
         <div class="form-item">
-            <label>区域</label>
-            <input type="text" data-dojo-type="dijit/form/TextBox" name="area" id="area" />
+            <label>筛选区域</label>
+            <input type="text" data-dojo-type="dijit/form/TextBox" name="area" id="area" placeholder="逗号分隔的区域名称" />
         </div>
 
 
