@@ -20,7 +20,7 @@ namespace ToolSite.Controllers
         }
 
         [HttpPost]
-        public async Task<JsonResult> ExtractAreaHandle()
+        public async Task<PartialViewResult> ExtractAreaHandle()
         {
             var tmpFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tmp");
             if (!Directory.Exists(tmpFolder))
@@ -35,9 +35,8 @@ namespace ToolSite.Controllers
                     await files[0].CopyToAsync(targetStream);
             }
 
-
-
-            return Json(new { Name = "test" });
+            ViewBag.DowloadFileName = "bob";
+            return PartialView("_MetadataDowload");
         }
     }
 

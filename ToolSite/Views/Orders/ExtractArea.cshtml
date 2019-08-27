@@ -24,10 +24,10 @@
 
 
                 iframe("/Orders/ExtractAreaHandle", {
-                    form: "uploadBoxForm",
-                    handleAs: "json"
-                }).then(function (data) {
-                    console.log('res', data);
+                    form: "uploadBoxForm"
+                }).then(function (doc) {
+                    //var data = doc.getElementsByTagName('textarea')[0].value;
+                    console.log('res', doc);
                 }, function (err) {
                     console.log('error', err);
                 });
