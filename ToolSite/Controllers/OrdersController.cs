@@ -74,7 +74,7 @@ namespace ToolSite.Controllers
                 var areaNames = mapping.Keys.OrderBy(x => x).ToList();
                 if (!string.IsNullOrWhiteSpace(filterAreaStr))
                 {
-                    var s = filterAreaStr.ToString().Replace("，", ",").ToUpper();
+                    var s = filterAreaStr.ToString().Replace("，", ",").Replace(" ", string.Empty).ToUpper();
                     var farr = s.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
                     if (farr.Count > 0)
                     {
