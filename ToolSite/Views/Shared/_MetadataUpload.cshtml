@@ -101,10 +101,6 @@
                 text-indent: 1rem;
             }
 
-        a #_hidenDownloadLink {
-            display: none;
-        }
-
         div.loadingLayer {
             display: flex;
             flex-flow: row;
@@ -118,9 +114,9 @@
             background-color: rgba(229,229,229,0.5);
         }
 
-            div.loadingLayer.hidden {
-                display: none;
-            }
+        .hidden {
+            display: none !important;
+        }
     </style>
     @RenderSection("styles", false)
     <script>
@@ -173,8 +169,8 @@
         </div>
         @RenderBody()
     </div>
-    <div class="loadingLayer hidden" id="loadingLayer"><span class="animated infinite jello">数据处理中,请耐心稍等...</span></div>
-    <a href="#" id="_hidenDownloadLink" download=""></a>
+    <div class="loadingLayer hidden" id="loadingLayer"><span class="animated infinite pulse">数据处理中,请耐心稍等...</span></div>
+    <a href="#" class="hidden" id="_hidenDownloadLink" download=""></a>
     @RenderSection("scripts", required: false)
 </body>
 </html>
