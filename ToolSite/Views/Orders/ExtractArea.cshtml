@@ -6,29 +6,30 @@
 
 @section scripts{
     <script>
-
-        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/request/xhr", "dojo/dom"], function (ready, registry, iframe, xhr, dom) {
+        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/on", "dojo/dom", "mytool/loading"], function (ready, registry, iframe, on, dom, loading) {
             ready(function () {
                 var wbtnDataProcessing = registry.byId("btnDataProcessing");
                 wbtnDataProcessing.on("click", processingMetadata);
+                on(dom.byId("orderFile"), "change", function (evt) { uploaderFileChange(evt.target.files); });
             });//ready
 
+            function uploaderFileChange(fileArr) {
+                //判断是否可以提交表单
+                var wbtnDataProcessing = registry.byId("btnDataProcessing");
+                wbtnDataProcessing.set("disabled", fileArr.length <= 0);
+            }//enableProcessing
 
             function processingMetadata() {
-
-
+                _showLoadingLayer();
                 iframe("/Orders/ExtractAreaHandle", {
                     form: "uploadBoxForm"
-                }).then(function (doc) {
-                    //var data = doc.getElementsByTagName('textarea')[0].value;
-                    console.log('res', doc);
+                }).then(function (path) {
+                    _downloadProcessExel(path);
+
                 }, function (err) {
-                    console.log('error', err);
+                    _showErrorMessage(err);
                 });
-
-
             }//processingMetadata
-
         });//require
     </script>
 }
@@ -36,22 +37,24 @@
 @section uploadbox{
 
     <form method="post" enctype="multipart/form-data" id="uploadBoxForm">
-        <div class="form-item">
+        <div class="form-item required">
             <label for="orderRecord">订单流水</label>
-            <input type="file" data-dojo-type="dojox/form/Uploader" label="选取文件" name="orderFile" id="orderFile" accept=".xlsx" />
+            <input type="file" label="选取文件" name="orderFile" id="orderFile" accept=".xlsx" />
         </div>
         <div class="form-item">
             <label>筛选区域</label>
             <input type="text" data-dojo-type="dijit/form/TextBox" name="area" id="area" placeholder="逗号分隔的区域名称" />
         </div>
-
-
-        <button data-dojo-type="dijit/form/Button" id="btnDataProcessing">数据处理</button>
+        <button data-dojo-type="dijit/form/Button" id="btnDataProcessing" disabled>数据处理</button>
     </form>
 }
 
 
 @section description{
-    <h5>订单流水按区域切分功能说明:</h5>
+    <h4 class="title">订单流水按区域切分功能说明:</h4>
+    <p class="des">此小工具针对"网店精灵"软件中"带包装订单"中"未拣货"表格导出进行按区域分表</p>
+    <h4 class="title">使用说明:</h4>
+    <p class="des">1. 订单流水为xlsx格式个表格文件,是必填信息</p>
+    <p class="des">2. 筛选区域填写所需要导出区域信息,可以不填,不填默认导出所有区域,如果需要进行筛选,以逗号分隔填写区域名称,大小写不限,如:a,b,c</p>
 }
 

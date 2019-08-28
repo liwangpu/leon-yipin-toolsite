@@ -68,10 +68,6 @@ namespace ToolSite.Controllers
                         }
 
                     }
-                    //else
-                    //    dataSheet.DeleteRow(idx, 1);
-
-
                 }
 
                 var filterAreaStr = Request.Form["area"];

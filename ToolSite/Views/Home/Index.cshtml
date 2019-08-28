@@ -3,9 +3,41 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@section styles{
+    <style>
+        div.page {
+            padding: 1rem;
+        }
+
+        table.tool {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            table.tool th:first-of-type {
+                width: 300px;
+            }
+
+            table.tool th, td {
+                border: 1px solid #d0d0d0;
+                padding: .3rem;
+            }
+    </style>
+}
 
 <div class="page">
-    <ul>
-        <li><a href="/Orders/ExtractArea">订单流水按区域提取</a></li>
-    </ul>
+    <table class="tool">
+        <thead>
+            <tr>
+                <th>小工具</th>
+                <th>描述</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="/Orders/ExtractArea">订单流水按区域提取</a></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
 </div>
