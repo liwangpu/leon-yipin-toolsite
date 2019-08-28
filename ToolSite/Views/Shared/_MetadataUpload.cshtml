@@ -6,20 +6,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <style>
-        html, body {
-            width: 100%;
-            height: 100%;
-        }
-
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-    </style>
+    @await Html.PartialAsync("_StyleSettup")
     <link rel="stylesheet" href='@Url.Content("~/styles/animate.css")' media="screen">
-    <link rel="stylesheet" href='@Url.Content("~/dojo-1.15.0/dijit/themes/claro/claro.css")' media="screen">
     <style>
         div.page {
             width: 100%;
@@ -124,41 +112,7 @@
         }
     </style>
     @RenderSection("styles", false)
-    <script>
-        dojoConfig = {
-            parseOnLoad: true,
-            packages: [{ name: "mytool", location: "../../scripts" }]
-        };
-    </script>
-    <script src='@Url.Content("~/dojo-1.15.0/dojo/dojo.js")'></script>
-    <script>
-        require(["dojo/dom", "dojo/on", "dojo/dom-attr", "dojo/dom-class", "dojo/string", "dojo/domReady!"], function (dom, on, domAttr, domClass, string) {
-            var loadingLayerNode = dom.byId("loadingLayer");
-            on(dom.byId("nav"), "click", function () { location.href = "/"; });
-
-            window._downloadProcessExel = function (path) {
-                var downloadLinkNode = dom.byId("_hidenDownloadLink");
-                domAttr.set(downloadLinkNode, "href", string.trim(path));
-                downloadLinkNode.click();
-                _closeLoadingLayer();
-            }//window._downloadProcessExel
-
-            window._showLoadingLayer = function () {
-                domClass.remove(loadingLayerNode, "hidden");
-            }//window._showLoadingLayer
-
-            window._closeLoadingLayer = function () {
-                domClass.add(loadingLayerNode, "hidden");
-            }//window._showLoadingLayer
-
-            window._showErrorMessage = function (message) {
-                _closeLoadingLayer();
-                this.console.error(message);
-                this.alert("数据处理中出现异常,请把表格转发发给管理员检查错误信息!");
-            }//window._showErrorMessage
-        });//require
-
-    </script>
+    @await Html.PartialAsync("_DojoSettup")
 </head>
 <body class="claro">
     <div class="page">
