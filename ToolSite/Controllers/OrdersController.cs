@@ -51,10 +51,22 @@ namespace ToolSite.Controllers
                 var endRow = dataSheet.Dimension.End.Row;
                 var endColumn = dataSheet.Dimension.End.Column;
                 var areaFlagColumn = endColumn + 1;
-
+                //默认的话,"库位号"在第8列,但是也有可能改变
+                var areaColumn = 8;
+                if (dataSheet.Cells[1, 8].Value == null || dataSheet.Cells[1, 8].Value.ToString().Trim() != "库位号")
+                {
+                    for (int i = 1; i <= endColumn; i++)
+                    {
+                        if (dataSheet.Cells[1, i].Value.ToString().Trim() == "库位号")
+                        {
+                            areaColumn = i;
+                            break;
+                        }
+                    }
+                }
                 for (int idx = endRow; idx >= 2; idx--)
                 {
-                    var areaObj = dataSheet.Cells[idx, 8].Value;
+                    var areaObj = dataSheet.Cells[idx, areaColumn].Value;
                     if (areaObj != null)
                     {
                         var areaStr = areaObj.ToString();
@@ -104,7 +116,6 @@ namespace ToolSite.Controllers
                 package.Workbook.Worksheets.Delete(0);
                 package.Save();
             }
-
 
             ViewBag.DowloadFileName = $"/tmp/{orderFileName}";
             return PartialView("_MetadataDowload");

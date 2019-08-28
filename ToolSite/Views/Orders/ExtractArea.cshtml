@@ -11,6 +11,7 @@
                 var wbtnDataProcessing = registry.byId("btnDataProcessing");
                 wbtnDataProcessing.on("click", processingMetadata);
                 on(dom.byId("orderFile"), "change", function (evt) { uploaderFileChange(evt.target.files); });
+                on(dom.byId("nav"), "click", function () { location.href = "/"; });
             });//ready
 
             function uploaderFileChange(fileArr) {
@@ -53,11 +54,11 @@
 
 @section description{
     <h4 class="title">订单流水按区域切分功能说明:</h4>
-    <p class="des">此小工具针对"网店精灵"软件中"带包装订单"中"未拣货"表格导出进行按区域分表</p>
+    <p class="des">此小工具针对"网店精灵"软件中"带包装订单"中"未拣货"导出的订单流水表格进行按区域分表，分表的原则为库位号区域信息都为同一个区域的，就划分到一张表。例如："A00R04-L4-02;A00R05-L4-01;A01R05-L4-05;"，该库位号中的首字母为区域信息，都为A,则划分到"A区域"表，如果有一个不是A区域的，则不进行划分</p>
     <h4 class="title">使用说明:</h4>
     <p class="des">1. 订单流水为xlsx格式的表格文件，是必填信息</p>
-    <p class="des warn">2. 订单流水表格的格式很重要，表格需要仅包含一张Sheet表(名称可以随便起)，"库位号"请一定放在表格的第H列</p>
-    <p class="des">3. 筛选区域填写所需要导出区域信息，可以不填，不填默认导出所有区域，如果需要进行筛选，以逗号分隔填写区域名称，大小写不限，如:a,b,c 。如果筛选结果没有出现填写的区域分表，是因为真的没有改区域的信息</p>
+    <p class="des warn">2. 订单流水表格的格式很重要，表格只能包含一张Sheet表(名称可以随便起)，表格中第一行为标题行,其中"库位号"为必须列(列的位置可以随便在哪一列)</p>
+    <p class="des">3. 筛选区域填写所需要导出区域信息，可以不填，不填默认导出所有区域。如果需要进行筛选，以逗号分隔填写区域名称，大小写不限，如：a,b,c 。如果筛选结果没有出现填写的区域分表，是因为真的没有该区域的信息</p>
 
 }
 
