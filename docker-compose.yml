@@ -8,6 +8,6 @@ services:
       context: .
       dockerfile: ToolSite/Dockerfile
     volumes:
-      - "/var/leon-test/my-test-toolsite/wwwroot:/app/wwwroot"
+      - "/var/leon-test/my-test-toolsite/wwwroot/tmp:/app/wwwroot/tmp"
     ports:
       - "9871:80"
