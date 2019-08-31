@@ -6,7 +6,7 @@
 
 @section scripts{
     <script>
-        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/on", "dojo/dom", "dojo/dom-class", "dojo/string", "dojo/dom-attr"], function (ready, registry, iframe, on, dom, domClass, string, domAttr) {
+        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/on", "dojo/dom"], function (ready, registry, iframe, on, dom) {
             ready(function () {
                 var wbtnDataProcessing = registry.byId("btnDataProcessing");
                 on(dom.byId("nav"), "click", function () { location.href = "/"; });

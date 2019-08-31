@@ -4,6 +4,7 @@ div.mytool-singleUploader {
 
     div.mytool-singleUploader input[type="text"] {
         width: 100%;
+        min-width:240px;
         font: inherit;
         font-style: italic;
         line-height: normal;
