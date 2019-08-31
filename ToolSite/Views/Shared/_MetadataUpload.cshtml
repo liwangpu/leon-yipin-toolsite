@@ -8,6 +8,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     @await Html.PartialAsync("_StyleSettup")
     <link rel="stylesheet" href='@Url.Content("~/styles/animate.css")' media="screen">
+    <link rel="stylesheet" href='@Url.Content("~/scripts/styles/singleUploader.css")'>
     <style>
         div.page {
             width: 100%;
@@ -56,6 +57,7 @@
                 display: inline-block;
                 font-size: 1rem;
                 width: 90px;
+                text-align: right;
             }
 
             div.form-item.required > label {

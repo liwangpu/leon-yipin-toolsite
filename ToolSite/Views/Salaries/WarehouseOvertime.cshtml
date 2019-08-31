@@ -1,0 +1,39 @@
+﻿
+@{
+    ViewBag.Title = "仓库加班考勤";
+    Layout = "~/Views/Shared/_MetadataUpload.cshtml";
+}
+
+@section scripts{
+    <script>
+        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/on", "dojo/dom", "dojo/dom-class", "dojo/string", "dojo/dom-attr"], function (ready, registry, iframe, on, dom, domClass, string, domAttr) {
+            ready(function () {
+                var wbtnDataProcessing = registry.byId("btnDataProcessing");
+                on(dom.byId("nav"), "click", function () { location.href = "/"; });
+                wbtnDataProcessing.on("click", processingMetadata);
+            });//ready
+
+            function processingMetadata() {
+                var wform = registry.byId("uploadBoxForm");
+                var valid = wform.validate();
+                if (!valid) return;
+                alert(1);
+            }//processingMetadata
+        });//require
+    </script>
+}
+
+@section uploadbox{
+
+    <form method="post" enctype="multipart/form-data" data-dojo-type="dijit/form/Form" id="uploadBoxForm">
+        <div class="form-item required">
+            <label>月份</label>
+            <input type="number" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props="constraints:{min:1,max:12}" name="month" id="month" required />
+        </div>
+        <div class="form-item required">
+            <label for="orderRecord">考勤表</label>
+            <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'signinFile',accept:'.xlsx',required:true"></div>
+        </div>
+        <button data-dojo-type="dijit/form/Button" id="btnDataProcessing">数据处理</button>
+    </form>
+}
