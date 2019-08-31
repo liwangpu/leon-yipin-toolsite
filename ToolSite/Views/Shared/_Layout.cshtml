@@ -18,16 +18,9 @@
             box-sizing: border-box;
         }
     </style>
-    <link rel="stylesheet" href='@Url.Content("~/dojo-1.15.0/dijit/themes/claro/claro.css")' media="screen">
     @RenderSection("styles", false)
-    <script>
-        dojoConfig = {
-            parseOnLoad: true
-        };
-    </script>
-    <script src='@Url.Content("~/dojo-1.15.0/dojo/dojo.js")'></script>
 </head>
-<body class="tundra">
+<body>
     @RenderBody()
     @RenderSection("scripts", required: false)
 </body>
