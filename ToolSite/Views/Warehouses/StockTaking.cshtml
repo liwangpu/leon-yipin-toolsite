@@ -1,8 +1,52 @@
 ﻿
 @{
-    ViewData["Title"] = "StockTaking";
+    ViewBag.Title = "库存盘点";
     Layout = "~/Views/Shared/_MetadataUpload.cshtml";
 }
 
-<h2>StockTaking</h2>
+@section scripts{
+    <script>
+        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/on", "dojo/dom", "dojo/topic"], function (ready, registry, iframe, on, dom, topic) {
+            ready(function () {
+                var wbtnDataProcessing = registry.byId("btnDataProcessing");
+                wbtnDataProcessing.on("click", processingMetadata);
+                on(dom.byId("nav"), "click", function () { location.href = "/"; });
+            });//ready
+
+            function processingMetadata() {
+                var wform = registry.byId("uploadBoxForm");
+                var valid = wform.validate();
+                if (!valid) return;
+
+                alert(1);
+                //topic.publish("DataProcessing");
+                //iframe("/Orders/ExtractAreaHandle", {
+                //    form: "uploadBoxForm"
+                //}).then(function (path) {
+                //    topic.publish("DownloadProcessExel", path);
+                //    topic.publish("DataProcessCompleted");
+                //}, function (err) {
+                //    topic.publish("DataProcessCompleted");
+                //    topic.publish("ReportErrorMessage", err);
+                //});
+            }//processingMetadata
+        });//require
+    </script>
+}
+
+
+@section uploadbox{
+    <form method="post" enctype="multipart/form-data" data-dojo-type="dijit/form/Form" id="uploadBoxForm">
+        <div class="form-item required">
+            <label for="orderRecord">缺货单</label>
+            <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'orderFile',accept:'.xlsx',required:true"></div>
+        </div>
+        <div class="form-item required">
+            <label>库存信息</label>
+            <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'stock',accept:'.xlsx',required:true"></div>
+        </div>
+        <button data-dojo-type="dijit/form/Button" id="btnDataProcessing">数据处理</button>
+    </form>
+}
+
 

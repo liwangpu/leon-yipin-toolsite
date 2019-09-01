@@ -27,6 +27,7 @@ div.mytool-singleUploader {
         div.mytool-singleUploader input[type="text"]:hover {
             border-color: #759dc0;
             background-color: #e5f2fe;
+            cursor:pointer;
         }
 
     div.mytool-singleUploader input[type="file"] {
