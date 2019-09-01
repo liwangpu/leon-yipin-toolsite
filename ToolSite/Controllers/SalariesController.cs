@@ -339,7 +339,7 @@ namespace ToolSite.Controllers
             }
             #endregion
 
-            ViewBag.DowloadFileName = $"/tmp/{resultFileName}";
+            ViewBag.DowloadFileName = resultFileName;
             return PartialView("_MetadataDowload");
         }
 

@@ -117,7 +117,7 @@ namespace ToolSite.Controllers
                 package.Save();
             }
 
-            ViewBag.DowloadFileName = $"/tmp/{orderFileName}";
+            ViewBag.DowloadFileName = orderFileName;
             return PartialView("_MetadataDowload");
         }
 
