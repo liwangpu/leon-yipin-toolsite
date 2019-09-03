@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.28307.757
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToolSite", "ToolSite\ToolSite.csproj", "{17A3963F-985C-460A-A30F-67F7448C6A5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EpplusHelper", "EpplusHelper\EpplusHelper.csproj", "{D70B7961-3C59-4293-9377-A65862E1AB65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EpplusHelper.Test", "EpplusHelper.Test\EpplusHelper.Test.csproj", "{8AD41903-3669-48DF-95E0-6194AB8BCB19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{17A3963F-985C-460A-A30F-67F7448C6A5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17A3963F-985C-460A-A30F-67F7448C6A5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17A3963F-985C-460A-A30F-67F7448C6A5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D70B7961-3C59-4293-9377-A65862E1AB65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D70B7961-3C59-4293-9377-A65862E1AB65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D70B7961-3C59-4293-9377-A65862E1AB65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D70B7961-3C59-4293-9377-A65862E1AB65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AD41903-3669-48DF-95E0-6194AB8BCB19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AD41903-3669-48DF-95E0-6194AB8BCB19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AD41903-3669-48DF-95E0-6194AB8BCB19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AD41903-3669-48DF-95E0-6194AB8BCB19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

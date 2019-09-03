@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Content Remove="nlog.config" />
+    <Content Remove="web.config" />
   </ItemGroup>
 
   <ItemGroup>

@@ -18,17 +18,16 @@
                 var valid = wform.validate();
                 if (!valid) return;
 
-                alert(1);
-                //topic.publish("DataProcessing");
-                //iframe("/Orders/ExtractAreaHandle", {
-                //    form: "uploadBoxForm"
-                //}).then(function (path) {
-                //    topic.publish("DownloadProcessExel", path);
-                //    topic.publish("DataProcessCompleted");
-                //}, function (err) {
-                //    topic.publish("DataProcessCompleted");
-                //    topic.publish("ReportErrorMessage", err);
-                //});
+                topic.publish("DataProcessing");
+                iframe("/Warehouses/StockTakingHandler", {
+                    form: "uploadBoxForm"
+                }).then(function (path) {
+                    topic.publish("DownloadProcessExel", path);
+                    topic.publish("DataProcessCompleted");
+                }, function (err) {
+                    topic.publish("DataProcessCompleted");
+                    topic.publish("ReportErrorMessage", err);
+                });
             }//processingMetadata
         });//require
     </script>
@@ -39,7 +38,7 @@
     <form method="post" enctype="multipart/form-data" data-dojo-type="dijit/form/Form" id="uploadBoxForm">
         <div class="form-item required">
             <label for="orderRecord">缺货单</label>
-            <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'orderFile',accept:'.xlsx',required:true"></div>
+            <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'stockout',accept:'.xlsx',required:true"></div>
         </div>
         <div class="form-item required">
             <label>库存信息</label>

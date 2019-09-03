@@ -11,3 +11,4 @@ services:
       - "/var/leon-test/my-test-toolsite/wwwroot/tmp:/app/wwwroot/tmp"
     ports:
       - "9871:80"
+    restart: always
