@@ -8,7 +8,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
+using ToolSite.Models.Salary;
 
 namespace ToolSite.Controllers
 {
@@ -341,23 +341,6 @@ namespace ToolSite.Controllers
 
             ViewBag.DowloadFileName = resultFileName;
             return PartialView("_MetadataDowload");
-        }
-
-        class _仓库加班考勤数据
-        {
-            public int _员工序号 { get; set; }
-            public string _姓名 { get; set; }
-            public List<string> _加班信息 { get; set; }
-        }
-
-        class _仓库加班绩效
-        {
-            public int _员工序号 { get; set; }
-            public string _姓名 { get; set; }
-            public List<double> _出勤时长 { get; set; }
-            public List<double> _加班时长 { get; set; }
-            public List<bool> _打卡出现异常 { get; set; }
-            public List<string> _原始打卡时间 { get; set; }
         }
     }
 }
