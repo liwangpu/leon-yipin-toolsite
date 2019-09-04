@@ -39,4 +39,8 @@
     <None Include="wwwroot\favicon.ico" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\EpplusHelper\EpplusHelper.csproj" />
+  </ItemGroup>
+
 </Project>
