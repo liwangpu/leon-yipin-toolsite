@@ -76,7 +76,7 @@ namespace EpplusHelper
                     foreach (var item in mapping)
                     {
                         var cell = sheet.Cells[idx, item.Value.Item2];
-                        if (cell == null) continue;
+                        if (cell.Value == null) continue;
 
                         if (item.Value.Item1 == "int")
                             mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<int>() });
