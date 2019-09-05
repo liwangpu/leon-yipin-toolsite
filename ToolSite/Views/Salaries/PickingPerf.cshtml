@@ -1,0 +1,23 @@
+﻿
+@{
+    ViewBag.Title = "配货绩效";
+    Layout = "~/Views/Shared/_MetadataUpload.cshtml";
+}
+
+
+
+
+@section uploadbox{
+    <form method="post" enctype="multipart/form-data" data-dojo-type="dijit/form/Form" id="monthlyWorkingHoursForm">
+        <p class="form-title">月上班时间信息</p>
+        <div class="form-item required">
+            <label>月份</label>
+            <input type="number" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props="constraints:{min:1,max:12}" name="month" id="month" required />
+        </div>
+        <div class="form-item required">
+            <label for="orderRecord">上班时间</label>
+            <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'monthlyWorkingHoursFile',accept:'.xlsx',required:true"></div>
+        </div>
+        <button data-dojo-type="dijit/form/Button" id="btnDataProcessing">数据上传</button>
+    </form>
+}

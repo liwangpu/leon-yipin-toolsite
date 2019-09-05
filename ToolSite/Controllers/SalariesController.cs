@@ -342,5 +342,21 @@ namespace ToolSite.Controllers
             ViewBag.DowloadFileName = resultFileName;
             return PartialView("_MetadataDowload");
         }
+
+
+        public ActionResult PickingPerf()
+        {
+            return View();
+        }
+
+        public async Task<IActionResult> MonthlyWorkingHours()
+        {
+
+
+
+            return Ok();
+        }
+
+
     }
 }

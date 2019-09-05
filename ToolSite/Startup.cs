@@ -60,6 +60,10 @@ namespace ToolSite
             if (!Directory.Exists(tmpFolder))
                 Directory.CreateDirectory(tmpFolder);
 
+            var cacheFolder = Path.Combine(env.WebRootPath, "cache");
+            if (!Directory.Exists(cacheFolder))
+                Directory.CreateDirectory(cacheFolder);
+
             app.UseCookiePolicy();
 
             app.UseMvc(routes =>
