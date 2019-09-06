@@ -28,8 +28,8 @@
                     topic.publish("ReportErrorMessage", err);
                 });
 
-              
-                
+
+
             }//uploadWorkHoursMetadata
         });//require
     </script>
@@ -50,4 +50,31 @@
         <button data-dojo-type="dijit/form/Button" id="btnWorkHoursUpload">数据上传</button>
         <p class="form-tip">该数据每个月上传一次就好了,不用每天都上传,不过如果不确定是否上传过,再来一次也可以</p>
     </form>
+}
+
+@section custom{
+    <div class="upload-box">
+        <form method="post" enctype="multipart/form-data" data-dojo-type="dijit/form/Form" id="dailyPerfForm">
+            <div class="form-item required">
+                <label>绩效日期</label>
+                <input type="number" data-dojo-type="dijit/form/DateTextBox" name="pickingDate" id="pickingDate" required />
+            </div>
+            <div class="form-item required">
+                <label>张数定值</label>
+                <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="paperAmount" id="paperAmount" value="208" required />
+            </div>
+            <div class="form-item required">
+                <label>张数占比</label>
+                <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="paperRate" id="paperRate" value="0.75" required />
+            </div>
+            <div class="form-item required">
+                <label>数量定值</label>
+                <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="pickingAmount" id="pickingAmount" value="1186" required />
+            </div>
+            <div class="form-item required">
+                <label>数量占比</label>
+                <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="pickingRate" id="pickingRate" value="0.25" required />
+            </div>
+        </form>
+    </div>
 }

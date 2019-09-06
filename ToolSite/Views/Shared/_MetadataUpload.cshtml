@@ -47,6 +47,7 @@
             padding: .8rem;
             border: 1px solid #D0D0D0;
             border-radius: 4px;
+            margin-bottom: 1rem;
         }
 
         p.form-title {
@@ -99,7 +100,6 @@
             padding: .8rem;
             border: 1px solid #D0D0D0;
             border-radius: 4px;
-            margin-top: 1rem;
         }
 
             div.metadata-des > .title {
@@ -195,6 +195,7 @@
         <div class="upload-box">
             @RenderSection("uploadbox", false)
         </div>
+        @RenderSection("custom", false)
         <div class="metadata-des">
             @RenderSection("description", false)
         </div>
