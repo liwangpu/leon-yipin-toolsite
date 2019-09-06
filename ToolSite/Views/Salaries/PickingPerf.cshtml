@@ -10,7 +10,9 @@
             ready(function () {
                 on(dom.byId("nav"), "click", function () { location.href = "/"; });
                 registry.byId("btnWorkHoursUpload").on("click", uploadWorkHoursMetadata);
+                registry.byId("btnProcesingPerfData").on("click", uploadDailyPerfMetadata);
                 registry.byId("workHourMonth").set("value", new Date().getMonth());//初始化月工作时间的月份信息
+                registry.byId("pickingDate").set("value", new Date());//初始化月工作时间的月份信息
             });//ready
 
             function uploadWorkHoursMetadata() {
@@ -27,10 +29,16 @@
                     topic.publish("DataProcessCompleted");
                     topic.publish("ReportErrorMessage", err);
                 });
-
-
-
             }//uploadWorkHoursMetadata
+
+
+            function uploadDailyPerfMetadata() {
+                var wform = registry.byId("dailyPerfForm");
+                if (!wform.validate()) return;
+
+
+
+            }//uploadDailyPerfMetadata
         });//require
     </script>
 }
@@ -55,26 +63,40 @@
 @section custom{
     <div class="upload-box">
         <form method="post" enctype="multipart/form-data" data-dojo-type="dijit/form/Form" id="dailyPerfForm">
-            <div class="form-item required">
-                <label>绩效日期</label>
-                <input type="number" data-dojo-type="dijit/form/DateTextBox" name="pickingDate" id="pickingDate" required />
+            <p class="form-title">当天绩效计算</p>
+            <div class="form-group">
+                <div class="form-item required">
+                    <label>绩效日期</label>
+                    <input type="number" data-dojo-type="dijit/form/DateTextBox" name="pickingDate" id="pickingDate" required />
+                </div>
+                <div class="form-item required">
+                    <label>拣货单</label>
+                    <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'pickingFile',accept:'.xlsx',required:true"></div>
+                </div>
+                <div class="form-item required">
+                    <label>大单</label>
+                    <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'randomFile',accept:'.xlsx',required:true"></div>
+                </div>
             </div>
-            <div class="form-item required">
-                <label>张数定值</label>
-                <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="paperAmount" id="paperAmount" value="208" required />
+            <div class="form-group">
+                <div class="form-item required">
+                    <label>张数定值</label>
+                    <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="paperAmount" id="paperAmount" value="208" required />
+                </div>
+                <div class="form-item required">
+                    <label>张数占比</label>
+                    <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="paperRate" id="paperRate" value="0.75" required />
+                </div>
+                <div class="form-item required">
+                    <label>数量定值</label>
+                    <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="pickingAmount" id="pickingAmount" value="1186" required />
+                </div>
+                <div class="form-item required">
+                    <label>数量占比</label>
+                    <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="pickingRate" id="pickingRate" value="0.25" required />
+                </div>
             </div>
-            <div class="form-item required">
-                <label>张数占比</label>
-                <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="paperRate" id="paperRate" value="0.75" required />
-            </div>
-            <div class="form-item required">
-                <label>数量定值</label>
-                <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="pickingAmount" id="pickingAmount" value="1186" required />
-            </div>
-            <div class="form-item required">
-                <label>数量占比</label>
-                <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="pickingRate" id="pickingRate" value="0.25" required />
-            </div>
+            <button data-dojo-type="dijit/form/Button" id="btnProcesingPerfData">绩效计算</button>
         </form>
     </div>
 }
