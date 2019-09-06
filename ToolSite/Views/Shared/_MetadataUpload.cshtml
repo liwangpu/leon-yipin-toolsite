@@ -59,6 +59,13 @@
                 content: "："
             }
 
+        p.form-tip {
+            font-size: .9rem;
+            font-weight: 500;
+            padding-left: 2rem;
+            color: orange;
+        }
+
         div .form-item {
             display: inline-block;
             padding: .2rem .5rem .2rem 0;
@@ -129,12 +136,14 @@
     </style>
     @RenderSection("styles", false)
     <script>
-        require(["dojo/ready", "dojo/topic", "dojo/dom", "dojo/string", "dojo/dom-attr", "dojo/dom-class"], function (ready, topic, dom, string, domAttr, domClass) {
+        require(["dojo/ready", "dojo/topic", "dojo/dom", "dojo/string", "dojo/dom-attr", "dojo/dom-class", "dijit/registry"], function (ready, topic, dom, string, domAttr, domClass, registry) {
             ready(function () {
                 topic.subscribe("DownloadProcessExel", downloadProcessExel);
                 topic.subscribe("DataProcessing", dataProcessing);
                 topic.subscribe("DataProcessCompleted", dataProcessCompleted);
+                topic.subscribe("ReportMessage", reportMessage);
                 topic.subscribe("ReportErrorMessage", reportErrorMessage);
+                topic.subscribe("TipOperateSuccessfully", tipOperateSuccessfully);
             });//ready
 
             function downloadProcessExel(path) {
@@ -157,10 +166,23 @@
                 domClass.add(loadingLayerNode, "hidden");
             }//dataProcessCompleted
 
+            function reportMessage(message) {
+                var wdialog = registry.byId("rpMessageDialog");
+                wdialog.set("content", message);
+                wdialog.show();
+            }//reportMessage
+
             function reportErrorMessage(message) {
-                console.error(message);
-                alert("数据处理中出现异常,请把表格转发给管理员检查错误信息!");
+                var wdialog = registry.byId("rpMessageDialog");
+                wdialog.set("content", "数据处理中出现异常,请把表格转发给管理员检查错误信息!");
+                wdialog.show();
             }//reportErrorMessage
+
+            function tipOperateSuccessfully() {
+                var wdialog = registry.byId("rpMessageDialog");
+                wdialog.set("content", "操作成功!");
+                wdialog.show();
+            }//tipOperateSuccessfully
         });//require
     </script>
 </head>
@@ -179,7 +201,8 @@
         @RenderBody()
     </div>
     <div class="loadingLayer hidden" id="loadingLayer"><span class="animated infinite pulse">数据处理中,请耐心稍等...</span></div>
-    <a href="#" class="hidden" id="_hidenDownloadLink" download=""></a>
+    <a href="#" class="hidden" id="_hidenDownloadLink" download></a>
+    <div data-dojo-type="dijit/Dialog" id="rpMessageDialog" data-dojo-props="style:'width:300px',title:'温馨提示',duration:800"></div>
     @RenderSection("scripts", required: false)
 </body>
 </html>

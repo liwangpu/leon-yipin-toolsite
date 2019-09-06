@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using EpplusHelper;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System;
@@ -7,6 +9,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using ToolSite.Models.Salary;
 
@@ -18,11 +21,14 @@ namespace ToolSite.Controllers
     public class SalariesController : Controller
     {
         private readonly IHostingEnvironment env;
+        private const string PickingPerfMonthlyWorkingHoursCacheFolder = "配货绩效_月上班时间";
 
+        #region ctor
         public SalariesController(IHostingEnvironment env)
         {
             this.env = env;
         }
+        #endregion
 
         /// <summary>
         /// 仓库加班考勤
@@ -343,18 +349,46 @@ namespace ToolSite.Controllers
             return PartialView("_MetadataDowload");
         }
 
-
+        /// <summary>
+        /// 配货绩效
+        /// </summary>
+        /// <returns></returns>
         public ActionResult PickingPerf()
         {
             return View();
         }
 
-        public async Task<IActionResult> MonthlyWorkingHours()
+        /// <summary>
+        /// 配货绩效-月上班时间数据处理
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<PartialViewResult> MonthlyWorkingHoursHandle()
         {
+            var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
+            var cacheFolder = Path.Combine(env.WebRootPath, "cache", PickingPerfMonthlyWorkingHoursCacheFolder);
+            if (!Directory.Exists(cacheFolder)) Directory.CreateDirectory(cacheFolder);
+            var workHoursFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
+            var files = Request.Form.Files;
+            var monthStr = Request.Form["month"].ToString();
+            var workHours = new List<_配货绩效_员工月上班时间>();
+            if (files.Count > 0)
+            {
+                using (var targetStream = System.IO.File.Create(workHoursFilePath))
+                    await files[0].CopyToAsync(targetStream);
 
-
-
-            return Ok();
+                using (var package = new ExcelPackage(new FileInfo(workHoursFilePath)))
+                {
+                    var worksheet = package.Workbook.Worksheets[0];
+                    workHours = SheetReader<_配货绩效_员工月上班时间>.From(worksheet);
+                    var json = JsonConvert.SerializeObject(workHours);
+                    var workHoursCacheFilePath = Path.Combine(cacheFolder, monthStr + ".json");
+                    using (var fs = new StreamWriter(workHoursCacheFilePath, false, Encoding.UTF8))
+                        fs.Write(json);
+                }
+            }
+            ViewBag.DowloadFileName = "";
+            return PartialView("_MetadataDowload");
         }
 
 

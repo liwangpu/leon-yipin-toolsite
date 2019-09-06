@@ -4,7 +4,36 @@
     Layout = "~/Views/Shared/_MetadataUpload.cshtml";
 }
 
+@section scripts{
+    <script>
+        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/on", "dojo/dom", "dojo/topic"], function (ready, registry, iframe, on, dom, topic) {
+            ready(function () {
+                on(dom.byId("nav"), "click", function () { location.href = "/"; });
+                registry.byId("btnWorkHoursUpload").on("click", uploadWorkHoursMetadata);
+                registry.byId("workHourMonth").set("value", new Date().getMonth());//初始化月工作时间的月份信息
+            });//ready
 
+            function uploadWorkHoursMetadata() {
+                var wform = registry.byId("monthlyWorkingHoursForm");
+                if (!wform.validate()) return;
+
+                topic.publish("DataProcessing");
+                iframe("/Salaries/MonthlyWorkingHoursHandle", {
+                    form: "monthlyWorkingHoursForm"
+                }).then(function () {
+                    topic.publish("DataProcessCompleted");
+                    topic.publish("TipOperateSuccessfully");
+                }, function (err) {
+                    topic.publish("DataProcessCompleted");
+                    topic.publish("ReportErrorMessage", err);
+                });
+
+              
+                
+            }//uploadWorkHoursMetadata
+        });//require
+    </script>
+}
 
 
 @section uploadbox{
@@ -12,12 +41,13 @@
         <p class="form-title">月上班时间信息</p>
         <div class="form-item required">
             <label>月份</label>
-            <input type="number" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props="constraints:{min:1,max:12}" name="month" id="month" required />
+            <input type="number" data-dojo-type="dijit/form/NumberSpinner" data-dojo-props="constraints:{min:1,max:12}" name="month" id="workHourMonth" required />
         </div>
         <div class="form-item required">
             <label for="orderRecord">上班时间</label>
             <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'monthlyWorkingHoursFile',accept:'.xlsx',required:true"></div>
         </div>
-        <button data-dojo-type="dijit/form/Button" id="btnDataProcessing">数据上传</button>
+        <button data-dojo-type="dijit/form/Button" id="btnWorkHoursUpload">数据上传</button>
+        <p class="form-tip">该数据每个月上传一次就好了,不用每天都上传,不过如果不确定是否上传过,再来一次也可以</p>
     </form>
 }
