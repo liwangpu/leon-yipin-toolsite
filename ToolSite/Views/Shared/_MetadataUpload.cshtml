@@ -67,6 +67,33 @@
             color: orange;
         }
 
+            p.form-tip::before {
+                content: "● "
+            }
+
+        a.tip-link {
+            display: block;
+            font-size: .8rem;
+            color: green;
+            padding-left: 2rem;
+        }
+
+            a.tip-link::before {
+                content: "◆ "
+            }
+
+            a.tip-link:hover {
+                color: green;
+            }
+
+            a.tip-link:active {
+                color: green;
+            }
+
+            a.tip-link:link {
+                color: green;
+            }
+
         div .form-item {
             display: inline-block;
             padding: .2rem .5rem .2rem 0;

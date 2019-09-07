@@ -398,6 +398,10 @@ namespace ToolSite.Controllers
             return PartialView("_MetadataDowload");
         }
 
+        /// <summary>
+        /// 配货绩效-每日绩效计算
+        /// </summary>
+        /// <returns></returns>
         [HttpPost]
         public async Task<PartialViewResult> DailyWorkingHoursHandler()
         {
@@ -499,7 +503,7 @@ namespace ToolSite.Controllers
             }
             #endregion
 
-            //处理数据
+            #region 处理数据
             if (list拣货单.Count > 0)
             {
                 var allEmpNames = list人员负责库位信息.Select(x => x._姓名).Distinct().ToList();
@@ -676,11 +680,8 @@ namespace ToolSite.Controllers
                     }
                     #endregion
                 }
-            }
-
-
-
-
+            } 
+            #endregion
 
             ViewBag.DowloadFileName = resultFileName;
             return PartialView("_MetadataDowload");

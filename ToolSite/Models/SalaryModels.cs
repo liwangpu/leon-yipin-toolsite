@@ -404,4 +404,9 @@ namespace ToolSite.Models.Salary
             }
         }
     }
+
+    public class _配货绩效_全月绩效结果
+    {
+
+    }
 }
