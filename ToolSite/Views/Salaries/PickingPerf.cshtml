@@ -11,7 +11,7 @@
                 on(dom.byId("nav"), "click", function () { location.href = "/"; });
                 registry.byId("btnWorkHoursUpload").on("click", uploadWorkHoursMetadata);
                 registry.byId("btnProcesingPerfData").on("click", uploadDailyPerfMetadata);
-                registry.byId("workHourMonth").set("value", new Date().getMonth());//初始化月工作时间的月份信息
+                registry.byId("workHourMonth").set("value", new Date().getMonth() + 1);//初始化月工作时间的月份信息
                 registry.byId("pickingDate").set("value", new Date());//初始化月工作时间的月份信息
             });//ready
 
@@ -36,8 +36,16 @@
                 var wform = registry.byId("dailyPerfForm");
                 if (!wform.validate()) return;
 
-
-
+                topic.publish("DataProcessing");
+                iframe("/Salaries/DailyWorkingHoursHandler", {
+                    form: "dailyPerfForm"
+                }).then(function () {
+                    topic.publish("DataProcessCompleted");
+                    topic.publish("TipOperateSuccessfully");
+                }, function (err) {
+                    topic.publish("DataProcessCompleted");
+                    topic.publish("ReportErrorMessage", err);
+                });
             }//uploadDailyPerfMetadata
         });//require
     </script>
@@ -56,7 +64,7 @@
             <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'monthlyWorkingHoursFile',accept:'.xlsx',required:true"></div>
         </div>
         <button data-dojo-type="dijit/form/Button" id="btnWorkHoursUpload">数据上传</button>
-        <p class="form-tip">该数据每个月上传一次就好了,不用每天都上传,不过如果不确定是否上传过,再来一次也可以</p>
+        <p class="form-tip">该数据每个月上传一次就好了,不用每天都上传,不过如果不确定是否上传过或者数据有改动,再来一次也可以</p>
     </form>
 }
 
@@ -67,7 +75,7 @@
             <div class="form-group">
                 <div class="form-item required">
                     <label>绩效日期</label>
-                    <input type="number" data-dojo-type="dijit/form/DateTextBox" name="pickingDate" id="pickingDate" required />
+                    <input type="text" data-dojo-type="dijit/form/DateTextBox" name="pickingDate" id="pickingDate" required />
                 </div>
                 <div class="form-item required">
                     <label>拣货单</label>
@@ -76,6 +84,14 @@
                 <div class="form-item required">
                     <label>大单</label>
                     <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'randomFile',accept:'.xlsx',required:true"></div>
+                </div>
+                <div class="form-item required">
+                    <label>人员库位</label>
+                    <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'areaRepFile',accept:'.xlsx',required:true"></div>
+                </div>
+                <div class="form-item">
+                    <label for="orderRecord">帮忙时间</label>
+                    <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'helpingHoursFile',accept:'.xlsx'"></div>
                 </div>
             </div>
             <div class="form-group">
@@ -95,8 +111,9 @@
                     <label>数量占比</label>
                     <input type="number" data-dojo-type="dijit/form/NumberTextBox" name="pickingRate" id="pickingRate" value="0.25" required />
                 </div>
+                <button data-dojo-type="dijit/form/Button" id="btnProcesingPerfData">绩效计算</button>
             </div>
-            <button data-dojo-type="dijit/form/Button" id="btnProcesingPerfData">绩效计算</button>
+
         </form>
     </div>
 }

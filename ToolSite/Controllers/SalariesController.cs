@@ -22,6 +22,7 @@ namespace ToolSite.Controllers
     {
         private readonly IHostingEnvironment env;
         private const string PickingPerfMonthlyWorkingHoursCacheFolder = "配货绩效_月上班时间";
+        private const string PickingPerfMonthlyHelpingHoursCacheFolder = "配货绩效_月帮忙时间";
 
         #region ctor
         public SalariesController(IHostingEnvironment env)
@@ -366,31 +367,415 @@ namespace ToolSite.Controllers
         public async Task<PartialViewResult> MonthlyWorkingHoursHandle()
         {
             var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
-            var cacheFolder = Path.Combine(env.WebRootPath, "cache", PickingPerfMonthlyWorkingHoursCacheFolder);
-            if (!Directory.Exists(cacheFolder)) Directory.CreateDirectory(cacheFolder);
+            var workingHoursCacheFolder = Path.Combine(env.WebRootPath, "cache", PickingPerfMonthlyWorkingHoursCacheFolder);
+            if (!Directory.Exists(workingHoursCacheFolder)) Directory.CreateDirectory(workingHoursCacheFolder);
             var workHoursFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var files = Request.Form.Files;
             var monthStr = Request.Form["month"].ToString();
             var workHours = new List<_配货绩效_员工月上班时间>();
             if (files.Count > 0)
             {
-                using (var targetStream = System.IO.File.Create(workHoursFilePath))
-                    await files[0].CopyToAsync(targetStream);
-
-                using (var package = new ExcelPackage(new FileInfo(workHoursFilePath)))
+                var monthlyWorkingHoursFile = files.FirstOrDefault(x => x.Name == "monthlyWorkingHoursFile");
+                if (monthlyWorkingHoursFile != null)
                 {
-                    var worksheet = package.Workbook.Worksheets[0];
-                    workHours = SheetReader<_配货绩效_员工月上班时间>.From(worksheet);
-                    var json = JsonConvert.SerializeObject(workHours);
-                    var workHoursCacheFilePath = Path.Combine(cacheFolder, monthStr + ".json");
-                    using (var fs = new StreamWriter(workHoursCacheFilePath, false, Encoding.UTF8))
-                        fs.Write(json);
+                    using (var targetStream = System.IO.File.Create(workHoursFilePath))
+                        await monthlyWorkingHoursFile.CopyToAsync(targetStream);
+                    using (var package = new ExcelPackage(new FileInfo(workHoursFilePath)))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        workHours = SheetReader<_配货绩效_员工月上班时间>.From(worksheet);
+                        var json = JsonConvert.SerializeObject(workHours);
+                        var workHoursCacheFilePath = Path.Combine(workingHoursCacheFolder, monthStr + ".json");
+                        using (var fs = new StreamWriter(workHoursCacheFilePath, false, Encoding.UTF8))
+                            fs.Write(json);
+                    }
+                    System.IO.File.Delete(workHoursFilePath);
                 }
             }
             ViewBag.DowloadFileName = "";
             return PartialView("_MetadataDowload");
         }
 
+        [HttpPost]
+        public async Task<PartialViewResult> DailyWorkingHoursHandler()
+        {
+            var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
+            var workingHoursCacheFolder = Path.Combine(env.WebRootPath, "cache", PickingPerfMonthlyWorkingHoursCacheFolder);
+            var pickingFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
+            var randomFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
+            var areaRepFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
+            var helpHoursFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
+            var dailyPerfFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
+            var paperAmount = Convert.ToDouble(Request.Form["paperAmount"]);//张数定值
+            var paperRate = Convert.ToDouble(Request.Form["paperRate"]);//张数占比
+            var pickingAmount = Convert.ToDouble(Request.Form["pickingAmount"]);//数量定值
+            var pickingRate = Convert.ToDouble(Request.Form["pickingRate"]);//数量占比
+            var perfDate = Convert.ToDateTime(Request.Form["pickingDate"]);
+            var list拣货单 = new List<_配货绩效_拣货单>();
+            var list乱单 = new List<_配货绩效_乱单>();
+            var list人员负责库位信息 = new List<_配货绩效_拣货人员配置信息>();
+            var list最终绩效 = new List<_配货绩效_配货绩效结果>();
+            var list本月上班时间 = new List<_配货绩效_员工月上班时间>();
+            var list当天帮忙时间 = new List<_配货绩效_帮忙点货时间>();
+            var files = Request.Form.Files;
 
+            #region 读取表格信息
+            if (files.Count > 0)
+            {
+                var pickingFile = files.FirstOrDefault(x => x.Name == "pickingFile");
+                if (pickingFile != null)
+                {
+                    using (var targetStream = System.IO.File.Create(pickingFilePath))
+                        await pickingFile.CopyToAsync(targetStream);
+                    using (var package = new ExcelPackage(new FileInfo(pickingFilePath)))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        list拣货单 = SheetReader<_配货绩效_拣货单>.From(worksheet);
+                    }
+                    System.IO.File.Delete(pickingFilePath);
+                }
+
+                var randomFile = files.FirstOrDefault(x => x.Name == "randomFile");
+                if (randomFile != null)
+                {
+                    using (var targetStream = System.IO.File.Create(randomFilePath))
+                        await randomFile.CopyToAsync(targetStream);
+                    using (var package = new ExcelPackage(new FileInfo(randomFilePath)))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        list乱单 = SheetReader<_配货绩效_乱单>.From(worksheet);
+                        //将乱单转换正常拣货单
+                        foreach (var item乱单 in list乱单)
+                        {
+                            //var aaa = item乱单.ToData();
+                            list拣货单.AddRange(item乱单.ToData());
+                        }
+                    }
+                    System.IO.File.Delete(randomFilePath);
+                }
+
+                var areaRepFile = files.FirstOrDefault(x => x.Name == "areaRepFile");
+                if (areaRepFile != null)
+                {
+                    using (var targetStream = System.IO.File.Create(areaRepFilePath))
+                        await areaRepFile.CopyToAsync(targetStream);
+                    using (var package = new ExcelPackage(new FileInfo(areaRepFilePath)))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        list人员负责库位信息 = SheetReader<_配货绩效_拣货人员配置信息>.From(worksheet);
+                    }
+                    System.IO.File.Delete(areaRepFilePath);
+                }
+
+                var helpingHoursFile = files.FirstOrDefault(x => x.Name == "helpingHoursFile");
+                if (helpingHoursFile != null)
+                {
+                    using (var targetStream = System.IO.File.Create(helpHoursFilePath))
+                        await helpingHoursFile.CopyToAsync(targetStream);
+                    using (var package = new ExcelPackage(new FileInfo(helpHoursFilePath)))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        list当天帮忙时间 = SheetReader<_配货绩效_帮忙点货时间>.From(worksheet);
+                    }
+                    System.IO.File.Delete(helpHoursFilePath);
+                }
+            }
+            #endregion
+
+            #region 加载月缓存上班时间信息
+            {
+                var workHoursCacheFilePath = Path.Combine(workingHoursCacheFolder, perfDate.Month + ".json");
+                if (System.IO.File.Exists(workHoursCacheFilePath))
+                {
+                    using (var fs = new StreamReader(workHoursCacheFilePath, Encoding.UTF8))
+                    {
+                        var json = fs.ReadToEnd();
+                        list本月上班时间 = JsonConvert.DeserializeObject<List<_配货绩效_员工月上班时间>>(json);
+                    }
+                }
+            }
+            #endregion
+
+            //处理数据
+            if (list拣货单.Count > 0)
+            {
+                var allEmpNames = list人员负责库位信息.Select(x => x._姓名).Distinct().ToList();
+                allEmpNames.ForEach(name =>
+                {
+                    if (!string.IsNullOrEmpty(name))
+                    {
+
+                        //if (name.Trim()== "魏婷")
+                        //{
+
+                        //}
+                        var md = new _配货绩效_配货绩效结果();
+                        md._d张数占比 = paperRate;
+                        md._d张数定值 = paperAmount;
+                        md._d数量定值 = pickingAmount;
+                        md._d数量占比 = pickingRate;
+
+
+                        md._业绩归属人 = name;
+                        var _订单详情数据 = new List<_配货绩效_订单详情数据>();
+
+                        #region 抽取详细信息
+                        {
+                            var refLh = (from it in list拣货单
+                                         join s in list人员负责库位信息 on it._库位号 equals s.管理库位
+                                         where s._姓名 == name
+                                         select it).ToList();
+                            foreach (var deitem in refLh)
+                            {
+                                var item = deitem._拣货明细;
+                                foreach (var it in item)
+                                {
+                                    var arr = it.Replace(".", string.Empty).Split(new string[] { "*" }, StringSplitOptions.RemoveEmptyEntries);
+                                    if (arr.Length >= 2)
+                                    {
+                                        var detail = new _配货绩效_订单详情数据();
+                                        detail.SKU = arr[0].Trim();
+                                        detail.Amount = Convert.ToDouble(arr[1]);
+                                        detail._乱单 = deitem._乱单;
+                                        _订单详情数据.Add(detail);
+                                    }
+
+                                }
+                            }
+
+                        }
+                        #endregion
+
+                        var list订单详情数据_拣货单 = _订单详情数据.Where(x => x._乱单 == false).ToList();
+                        var list订单详情数据_乱单 = _订单详情数据.Where(x => x._乱单 == true).ToList();
+
+                        var str_帮忙总时长 = "";
+                        var refTime = calc计算上班时间(perfDate, name, ref str_帮忙总时长, list本月上班时间, list当天帮忙时间);
+                        md._拣货单张数_正常 = list订单详情数据_拣货单.Select(x => x.SKU).Distinct().Count();
+                        md._购买总数量_正常 = list订单详情数据_拣货单.Select(x => x.Amount).Sum();
+                        md._拣货单张数_乱单 = list订单详情数据_乱单.Select(x => x.SKU).Distinct().Count();
+                        md._购买总数量_乱单 = list订单详情数据_乱单.Select(x => x.Amount).Sum();
+
+
+                        md._总时长 = refTime.ToString();
+                        md._帮忙总时长 = str_帮忙总时长;
+                        md._分钟 = Convert.ToDouble(refTime * 60);
+
+
+                        list最终绩效.Add(md);
+                    }
+                });
+
+                if (list最终绩效.Count > 0)
+                {
+                    //ShowMsg("开始存储当天绩效");
+                    //Cache当天绩效(list最终绩效);
+                    //ShowMsg("当天绩效存储完毕");
+                    //ExportExcel(list最终绩效);
+                    using (var package = new ExcelPackage(new FileInfo(dailyPerfFilePath)))
+                    {
+                        var workbox = package.Workbook;
+                        var sheet1 = workbox.Worksheets.Add("Sheet1");
+
+
+                        #region 标题行
+                        sheet1.Cells[1, 1].Value = "姓名";
+                        sheet1.Cells[1, 2].Value = "拣货单数量";
+                        sheet1.Cells[1, 3].Value = "乱单数量";
+                        sheet1.Cells[1, 4].Value = "总数量";
+                        sheet1.Cells[1, 5].Value = "拣货单张数";
+                        sheet1.Cells[1, 6].Value = "乱单张数";
+                        sheet1.Cells[1, 7].Value = "总张数";
+                        sheet1.Cells[1, 8].Value = "帮忙总时长";
+                        sheet1.Cells[1, 9].Value = "工作总时长";
+                        sheet1.Cells[1, 10].Value = "分钟";
+                        sheet1.Cells[1, 11].Value = "拣货单效率";
+                        sheet1.Cells[1, 12].Value = "购买数量效率";
+                        sheet1.Cells[1, 13].Value = "小时";
+                        sheet1.Cells[1, 14].Value = "拣货单每小时";
+                        sheet1.Cells[1, 15].Value = "个数每小时";
+                        sheet1.Cells[1, 16].Value = "定值倍数";
+                        sheet1.Cells[1, 17].Value = "工资";
+
+                        #endregion
+
+                        #region 数据行
+                        for (int idx = 0, rowIdx = 2, len = list最终绩效.Count; idx < len; idx++)
+                        {
+                            var curOrder = list最终绩效[idx];
+                            sheet1.Cells[rowIdx, 1].Value = curOrder._业绩归属人;
+                            sheet1.Cells[rowIdx, 2].Value = curOrder._购买总数量_正常;
+                            sheet1.Cells[rowIdx, 3].Value = curOrder._购买总数量_乱单;
+                            sheet1.Cells[rowIdx, 4].Value = curOrder._购买总数量;
+                            sheet1.Cells[rowIdx, 5].Value = curOrder._拣货单张数_正常;
+                            sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_乱单;
+                            sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数;
+                            sheet1.Cells[rowIdx, 8].Value = curOrder._帮忙总时长;
+                            sheet1.Cells[rowIdx, 9].Value = curOrder._总时长;
+                            sheet1.Cells[rowIdx, 10].Value = curOrder._分钟;
+                            sheet1.Cells[rowIdx, 11].Value = curOrder._拣货单效率;
+                            sheet1.Cells[rowIdx, 12].Value = curOrder._购买数量效率;
+                            sheet1.Cells[rowIdx, 13].Value = curOrder._小时;
+                            sheet1.Cells[rowIdx, 14].Value = curOrder._拣货单每小时;
+                            sheet1.Cells[rowIdx, 15].Value = curOrder._个数每小时;
+                            sheet1.Cells[rowIdx, 16].Value = curOrder._定值倍数;
+                            sheet1.Cells[rowIdx, 17].Value = curOrder._工资;
+                            rowIdx++;
+                        }
+                        #endregion
+
+                        #region 全部边框
+                        {
+                            var endRow = sheet1.Dimension.End.Row;
+                            var endColumn = sheet1.Dimension.End.Column;
+                            using (var rng = sheet1.Cells[1, 1, endRow, endColumn])
+                            {
+                                rng.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                rng.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                rng.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                                rng.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                            }
+                        }
+                        #endregion
+
+                        sheet1.Cells[sheet1.Dimension.Address].AutoFitColumns();
+
+                        package.Save();
+                    }
+                }
+            }
+
+
+
+
+
+            ViewBag.DowloadFileName = "";
+            return PartialView("_MetadataDowload");
+        }
+
+        private decimal calc计算上班时间(DateTime d绩效日期, string str姓名, ref string str帮忙时间, List<_配货绩效_员工月上班时间> _本月上班时间, List<_配货绩效_帮忙点货时间> _本月帮忙拣货时间)
+        {
+
+            d绩效日期 = d绩效日期.Date;
+            if (_本月上班时间 != null && _本月上班时间.Count > 0)
+            {
+                var refer工作时间 = _本月上班时间.Where(x => x._姓名 == str姓名).FirstOrDefault();
+                var refer帮忙时间 = _本月帮忙拣货时间.Where(x => x._姓名 == str姓名 && x._日期 == d绩效日期).FirstOrDefault();
+                if (refer工作时间 != null)
+                {
+                    decimal d上班时间 = 0;
+                    decimal d帮忙时间 = 0;
+                    if (refer帮忙时间 != null && refer帮忙时间._帮忙总时间 != null)
+                    {
+                        var h = (refer帮忙时间._帮忙总时间).Hours;
+                        var mh = Math.Round((refer帮忙时间._帮忙总时间).Minutes / 60m, 1);
+                        d帮忙时间 = h + mh;
+                    }
+                    str帮忙时间 = d帮忙时间.ToString();
+                    switch (d绩效日期.Day)
+                    {
+                        case 1:
+                            d上班时间 = refer工作时间._1号;
+                            break;
+                        case 2:
+                            d上班时间 = refer工作时间._2号;
+                            break;
+                        case 3:
+                            d上班时间 = refer工作时间._3号;
+                            break;
+                        case 4:
+                            d上班时间 = refer工作时间._4号;
+                            break;
+                        case 5:
+                            d上班时间 = refer工作时间._5号;
+                            break;
+                        case 6:
+                            d上班时间 = refer工作时间._6号;
+                            break;
+                        case 7:
+                            d上班时间 = refer工作时间._7号;
+                            break;
+                        case 8:
+                            d上班时间 = refer工作时间._8号;
+                            break;
+                        case 9:
+                            d上班时间 = refer工作时间._9号;
+                            break;
+                        case 10:
+                            d上班时间 = refer工作时间._10号;
+                            break;
+                        case 11:
+                            d上班时间 = refer工作时间._11号;
+                            break;
+                        case 12:
+                            d上班时间 = refer工作时间._12号;
+                            break;
+                        case 13:
+                            d上班时间 = refer工作时间._13号;
+                            break;
+                        case 14:
+                            d上班时间 = refer工作时间._14号;
+                            break;
+                        case 15:
+                            d上班时间 = refer工作时间._15号;
+                            break;
+                        case 16:
+                            d上班时间 = refer工作时间._16号;
+                            break;
+                        case 17:
+                            d上班时间 = refer工作时间._17号;
+                            break;
+                        case 18:
+                            d上班时间 = refer工作时间._18号;
+                            break;
+                        case 19:
+                            d上班时间 = refer工作时间._19号;
+                            break;
+                        case 20:
+                            d上班时间 = refer工作时间._20号;
+                            break;
+                        case 21:
+                            d上班时间 = refer工作时间._21号;
+                            break;
+                        case 22:
+                            d上班时间 = refer工作时间._22号;
+                            break;
+                        case 23:
+                            d上班时间 = refer工作时间._23号;
+                            break;
+                        case 24:
+                            d上班时间 = refer工作时间._24号;
+                            break;
+                        case 25:
+                            d上班时间 = refer工作时间._25号;
+                            break;
+                        case 26:
+                            d上班时间 = refer工作时间._26号;
+                            break;
+                        case 27:
+                            d上班时间 = refer工作时间._27号;
+                            break;
+                        case 28:
+                            d上班时间 = refer工作时间._28号;
+                            break;
+                        case 29:
+                            d上班时间 = refer工作时间._29号;
+                            break;
+                        case 30:
+                            d上班时间 = refer工作时间._30号;
+                            break;
+                        case 31:
+                            d上班时间 = refer工作时间._31号;
+                            break;
+                        default:
+                            break;
+                    }
+                    if (d上班时间 <= 0)
+                        return 0;
+                    return d上班时间 - d帮忙时间;
+                }
+            }
+            return 0;
+        }
     }
 }
