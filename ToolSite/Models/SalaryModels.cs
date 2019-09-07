@@ -407,6 +407,11 @@ namespace ToolSite.Models.Salary
 
     public class _配货绩效_全月绩效结果
     {
+        public Dictionary<int, List<_配货绩效_配货绩效结果>> Perf { get; set; }
 
+        public _配货绩效_全月绩效结果()
+        {
+            Perf = new Dictionary<int, List<_配货绩效_配货绩效结果>>();
+        }
     }
 }

@@ -39,14 +39,22 @@
                 topic.publish("DataProcessing");
                 iframe("/Salaries/DailyWorkingHoursHandler", {
                     form: "dailyPerfForm"
-                }).then(function () {
+                }).then(function (path) {
+                    topic.publish("DownloadProcessExel", path);
                     topic.publish("DataProcessCompleted");
-                    topic.publish("TipOperateSuccessfully");
                 }, function (err) {
                     topic.publish("DataProcessCompleted");
                     topic.publish("ReportErrorMessage", err);
                 });
             }//uploadDailyPerfMetadata
+
+            function downloadDailyPerfTable() {
+                var wform = registry.byId("perfDownloadForm");
+                if (!wform.validate()) return;
+
+
+
+            }//downloadDailyPerfTable
         });//require
     </script>
 }
@@ -86,7 +94,7 @@
                     <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'randomFile',accept:'.xlsx',required:true"></div>
                 </div>
                 <div class="form-item required">
-                    <label>人员库位</label>
+                    <label>配货人员</label>
                     <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'areaRepFile',accept:'.xlsx',required:true"></div>
                 </div>
                 <div class="form-item">
@@ -115,7 +123,7 @@
             </div>
             <p class="form-tip">帮忙时间如果当天没有可以不用上传</p>
             <p class="form-tip">如果某天绩效忘记算了或者数据有改动，可以直接把数据上传再算一次</p>
-            <p class="form-tip">如果想查看一下某个月份所有算过的绩效信息，可以在下面的“历史绩效下载”里面，随便选择这个月份的某个日期，然后点击“我想看看和上面这个指定“绩效日期”月份的所有历史绩效信息”这句话，就可以看到啦</p>
+            <p class="form-tip">如果想查看一下某个月份所有算过的绩效信息，可以在下面的“历史绩效下载”里面，随便选择这个月份的某个日期，然后点击“我想看看和上面这个指定“绩效日期”月份相关的所有历史绩效信息”这句话，就可以看到啦</p>
         </form>
     </div>
 
@@ -129,7 +137,7 @@
 
             <button data-dojo-type="dijit/form/Button" id="btnDownloadDailyPerfData">下载当天绩效</button>
             <button data-dojo-type="dijit/form/Button" id="btnDownloadMonthlyPerfData">下载全月绩效</button>
-            <a class="tip-link" href="#">我想看看和上面这个指定“绩效日期”月份的所有历史绩效信息</a>
+            <a class="tip-link" href="#">我想看看和上面这个指定“绩效日期”月份相关的所有历史绩效信息</a>
         </form>
     </div>
 }
