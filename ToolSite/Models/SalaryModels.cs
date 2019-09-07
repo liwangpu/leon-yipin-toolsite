@@ -1,4 +1,5 @@
 ﻿using EpplusHelper;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,99 +28,167 @@ namespace ToolSite.Models.Salary
         [ExcelColumn("姓名", 1)]
         public string _姓名 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("1号", 2)]
         public decimal _1号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("2号", 3)]
         public decimal _2号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("3号", 4)]
         public decimal _3号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("4号", 5)]
         public decimal _4号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("5号", 6)]
         public decimal _5号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("6号", 7)]
         public decimal _6号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("7号", 8)]
         public decimal _7号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("8号", 9)]
         public decimal _8号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("9号", 10)]
         public decimal _9号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("10号", 11)]
         public decimal _10号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("11号", 12)]
         public decimal _11号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("12号", 13)]
         public decimal _12号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("13号", 14)]
         public decimal _13号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("14号", 15)]
         public decimal _14号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("15号", 16)]
         public decimal _15号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("16号", 17)]
         public decimal _16号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("17号", 18)]
         public decimal _17号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("18号", 19)]
         public decimal _18号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("19号", 20)]
         public decimal _19号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("20号", 21)]
         public decimal _20号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("21号", 22)]
         public decimal _21号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("22号", 23)]
         public decimal _22号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("23号", 24)]
         public decimal _23号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("24号", 25)]
         public decimal _24号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("25号", 26)]
         public decimal _25号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("26号", 27)]
         public decimal _26号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("27号", 28)]
         public decimal _27号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("28号", 29)]
         public decimal _28号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("29号", 30)]
         public decimal _29号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("30号", 31)]
         public decimal _30号 { get; set; }
 
+        [JsonIgnore]
         [ExcelColumn("31号", 32)]
         public decimal _31号 { get; set; }
+
         public List<decimal> _工作时间 { get; set; }
+
+        public void GenerateWorkingTime()
+        {
+            _工作时间 = new List<decimal>();
+            _工作时间.Add(_1号);
+            _工作时间.Add(_2号);
+            _工作时间.Add(_3号);
+            _工作时间.Add(_4号);
+            _工作时间.Add(_5号);
+            _工作时间.Add(_6号);
+            _工作时间.Add(_7号);
+            _工作时间.Add(_8号);
+            _工作时间.Add(_9号);
+            _工作时间.Add(_10号);
+            _工作时间.Add(_11号);
+            _工作时间.Add(_12号);
+            _工作时间.Add(_13号);
+            _工作时间.Add(_14号);
+            _工作时间.Add(_15号);
+            _工作时间.Add(_16号);
+            _工作时间.Add(_17号);
+            _工作时间.Add(_18号);
+            _工作时间.Add(_19号);
+            _工作时间.Add(_20号);
+            _工作时间.Add(_21号);
+            _工作时间.Add(_22号);
+            _工作时间.Add(_23号);
+            _工作时间.Add(_24号);
+            _工作时间.Add(_25号);
+            _工作时间.Add(_26号);
+            _工作时间.Add(_27号);
+            _工作时间.Add(_28号);
+            _工作时间.Add(_29号);
+            _工作时间.Add(_30号);
+            _工作时间.Add(_31号);
+        }
     }
 
     public class _配货绩效_拣货单
@@ -192,15 +261,6 @@ namespace ToolSite.Models.Salary
             return list;
         }
     }
-
-    //public class _配货绩效_拣货人员配置
-    //{
-    //    [ExcelColumn("库位")]
-    //    public string _库位 { get; set; }
-
-    //    [ExcelColumn("配货人员")]
-    //    public string _配货人员 { get; set; }
-    //}
 
     public class _配货绩效_订单详情数据
     {

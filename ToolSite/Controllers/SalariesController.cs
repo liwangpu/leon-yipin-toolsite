@@ -22,7 +22,7 @@ namespace ToolSite.Controllers
     {
         private readonly IHostingEnvironment env;
         private const string PickingPerfMonthlyWorkingHoursCacheFolder = "配货绩效_月上班时间";
-        private const string PickingPerfMonthlyHelpingHoursCacheFolder = "配货绩效_月帮忙时间";
+        private const string PickingPerfMonthlyHelpingHoursCacheFolder = "配货绩效";
 
         #region ctor
         public SalariesController(IHostingEnvironment env)
@@ -384,6 +384,8 @@ namespace ToolSite.Controllers
                     {
                         var worksheet = package.Workbook.Worksheets[0];
                         workHours = SheetReader<_配货绩效_员工月上班时间>.From(worksheet);
+                        for (int idx = workHours.Count - 1; idx >= 0; idx--)
+                            workHours[idx].GenerateWorkingTime();
                         var json = JsonConvert.SerializeObject(workHours);
                         var workHoursCacheFilePath = Path.Combine(workingHoursCacheFolder, monthStr + ".json");
                         using (var fs = new StreamWriter(workHoursCacheFilePath, false, Encoding.UTF8))
@@ -551,7 +553,35 @@ namespace ToolSite.Controllers
                         var list订单详情数据_乱单 = _订单详情数据.Where(x => x._乱单 == true).ToList();
 
                         var str_帮忙总时长 = "";
-                        var refTime = PickingPerfCalcWorkingHours(perfDate, name, ref str_帮忙总时长, list本月上班时间, list当天帮忙时间);
+                        decimal refTime = 0;
+
+                        #region 计算上班时间和帮忙时间
+                        {
+                            var d绩效日期 = perfDate.Date;
+                            if (list本月上班时间 != null && list本月上班时间.Count > 0)
+                            {
+                                var refer工作时间 = list本月上班时间.Where(x => x._姓名 == name).FirstOrDefault();
+                                var refer帮忙时间 = list当天帮忙时间.Where(x => x._姓名 == name).FirstOrDefault();
+                                if (refer工作时间 != null)
+                                {
+                                    decimal d上班时间 = 0;
+                                    decimal d帮忙时间 = 0;
+                                    if (refer帮忙时间 != null && refer帮忙时间._帮忙总时间 != null)
+                                    {
+                                        var h = (refer帮忙时间._帮忙总时间).Hours;
+                                        var mh = Math.Round((refer帮忙时间._帮忙总时间).Minutes / 60m, 1);
+                                        d帮忙时间 = h + mh;
+                                    }
+                                    str_帮忙总时长 = d帮忙时间.ToString();
+                                    d上班时间 = refer工作时间._工作时间[d绩效日期.Day - 1];
+                                    if (d上班时间 > 0)
+                                        refTime = d上班时间 - d帮忙时间;
+                                }
+                            }
+                        }
+                        #endregion
+
+
                         md._拣货单张数_正常 = list订单详情数据_拣货单.Select(x => x.SKU).Distinct().Count();
                         md._购买总数量_正常 = list订单详情数据_拣货单.Select(x => x.Amount).Sum();
                         md._拣货单张数_乱单 = list订单详情数据_乱单.Select(x => x.SKU).Distinct().Count();
@@ -573,6 +603,7 @@ namespace ToolSite.Controllers
                     //Cache当天绩效(list最终绩效);
                     //ShowMsg("当天绩效存储完毕");
                     //ExportExcel(list最终绩效);
+                    #region 生成绩效表格
                     using (var package = new ExcelPackage(new FileInfo(dailyPerfFilePath)))
                     {
                         var workbox = package.Workbook;
@@ -643,6 +674,7 @@ namespace ToolSite.Controllers
 
                         package.Save();
                     }
+                    #endregion
                 }
             }
 
@@ -654,142 +686,5 @@ namespace ToolSite.Controllers
             return PartialView("_MetadataDowload");
         }
 
-        /// <summary>
-        /// 配货绩效-计算上班时间和帮忙时间
-        /// </summary>
-        /// <param name="d绩效日期"></param>
-        /// <param name="str姓名"></param>
-        /// <param name="str帮忙时间"></param>
-        /// <param name="_本月上班时间"></param>
-        /// <param name="_本月帮忙拣货时间"></param>
-        /// <returns></returns>
-        private decimal PickingPerfCalcWorkingHours(DateTime d绩效日期, string str姓名, ref string str帮忙时间, List<_配货绩效_员工月上班时间> _本月上班时间, List<_配货绩效_帮忙点货时间> _本月帮忙拣货时间)
-        {
-            //if (str姓名 == "韩东霞")
-            //{
-
-            //}
-
-            d绩效日期 = d绩效日期.Date;
-            if (_本月上班时间 != null && _本月上班时间.Count > 0)
-            {
-                var refer工作时间 = _本月上班时间.Where(x => x._姓名 == str姓名).FirstOrDefault();
-                var refer帮忙时间 = _本月帮忙拣货时间.Where(x => x._姓名 == str姓名).FirstOrDefault();
-                if (refer工作时间 != null)
-                {
-                    decimal d上班时间 = 0;
-                    decimal d帮忙时间 = 0;
-                    if (refer帮忙时间 != null && refer帮忙时间._帮忙总时间 != null)
-                    {
-                        var h = (refer帮忙时间._帮忙总时间).Hours;
-                        var mh = Math.Round((refer帮忙时间._帮忙总时间).Minutes / 60m, 1);
-                        d帮忙时间 = h + mh;
-                    }
-                    str帮忙时间 = d帮忙时间.ToString();
-                    switch (d绩效日期.Day)
-                    {
-                        case 1:
-                            d上班时间 = refer工作时间._1号;
-                            break;
-                        case 2:
-                            d上班时间 = refer工作时间._2号;
-                            break;
-                        case 3:
-                            d上班时间 = refer工作时间._3号;
-                            break;
-                        case 4:
-                            d上班时间 = refer工作时间._4号;
-                            break;
-                        case 5:
-                            d上班时间 = refer工作时间._5号;
-                            break;
-                        case 6:
-                            d上班时间 = refer工作时间._6号;
-                            break;
-                        case 7:
-                            d上班时间 = refer工作时间._7号;
-                            break;
-                        case 8:
-                            d上班时间 = refer工作时间._8号;
-                            break;
-                        case 9:
-                            d上班时间 = refer工作时间._9号;
-                            break;
-                        case 10:
-                            d上班时间 = refer工作时间._10号;
-                            break;
-                        case 11:
-                            d上班时间 = refer工作时间._11号;
-                            break;
-                        case 12:
-                            d上班时间 = refer工作时间._12号;
-                            break;
-                        case 13:
-                            d上班时间 = refer工作时间._13号;
-                            break;
-                        case 14:
-                            d上班时间 = refer工作时间._14号;
-                            break;
-                        case 15:
-                            d上班时间 = refer工作时间._15号;
-                            break;
-                        case 16:
-                            d上班时间 = refer工作时间._16号;
-                            break;
-                        case 17:
-                            d上班时间 = refer工作时间._17号;
-                            break;
-                        case 18:
-                            d上班时间 = refer工作时间._18号;
-                            break;
-                        case 19:
-                            d上班时间 = refer工作时间._19号;
-                            break;
-                        case 20:
-                            d上班时间 = refer工作时间._20号;
-                            break;
-                        case 21:
-                            d上班时间 = refer工作时间._21号;
-                            break;
-                        case 22:
-                            d上班时间 = refer工作时间._22号;
-                            break;
-                        case 23:
-                            d上班时间 = refer工作时间._23号;
-                            break;
-                        case 24:
-                            d上班时间 = refer工作时间._24号;
-                            break;
-                        case 25:
-                            d上班时间 = refer工作时间._25号;
-                            break;
-                        case 26:
-                            d上班时间 = refer工作时间._26号;
-                            break;
-                        case 27:
-                            d上班时间 = refer工作时间._27号;
-                            break;
-                        case 28:
-                            d上班时间 = refer工作时间._28号;
-                            break;
-                        case 29:
-                            d上班时间 = refer工作时间._29号;
-                            break;
-                        case 30:
-                            d上班时间 = refer工作时间._30号;
-                            break;
-                        case 31:
-                            d上班时间 = refer工作时间._31号;
-                            break;
-                        default:
-                            break;
-                    }
-                    if (d上班时间 <= 0)
-                        return 0;
-                    return d上班时间 - d帮忙时间;
-                }
-            }
-            return 0;
-        }
     }
 }
