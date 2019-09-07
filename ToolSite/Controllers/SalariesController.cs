@@ -399,13 +399,14 @@ namespace ToolSite.Controllers
         [HttpPost]
         public async Task<PartialViewResult> DailyWorkingHoursHandler()
         {
+            var resultFileName = Guid.NewGuid().ToString() + ".xlsx";
             var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
             var workingHoursCacheFolder = Path.Combine(env.WebRootPath, "cache", PickingPerfMonthlyWorkingHoursCacheFolder);
             var pickingFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var randomFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var areaRepFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var helpHoursFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
-            var dailyPerfFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
+            var dailyPerfFilePath = Path.Combine(tmpFolder, resultFileName);
             var paperAmount = Convert.ToDouble(Request.Form["paperAmount"]);//张数定值
             var paperRate = Convert.ToDouble(Request.Form["paperRate"]);//张数占比
             var pickingAmount = Convert.ToDouble(Request.Form["pickingAmount"]);//数量定值
@@ -550,7 +551,7 @@ namespace ToolSite.Controllers
                         var list订单详情数据_乱单 = _订单详情数据.Where(x => x._乱单 == true).ToList();
 
                         var str_帮忙总时长 = "";
-                        var refTime = calc计算上班时间(perfDate, name, ref str_帮忙总时长, list本月上班时间, list当天帮忙时间);
+                        var refTime = PickingPerfCalcWorkingHours(perfDate, name, ref str_帮忙总时长, list本月上班时间, list当天帮忙时间);
                         md._拣货单张数_正常 = list订单详情数据_拣货单.Select(x => x.SKU).Distinct().Count();
                         md._购买总数量_正常 = list订单详情数据_拣货单.Select(x => x.Amount).Sum();
                         md._拣货单张数_乱单 = list订单详情数据_乱单.Select(x => x.SKU).Distinct().Count();
@@ -649,18 +650,31 @@ namespace ToolSite.Controllers
 
 
 
-            ViewBag.DowloadFileName = "";
+            ViewBag.DowloadFileName = resultFileName;
             return PartialView("_MetadataDowload");
         }
 
-        private decimal calc计算上班时间(DateTime d绩效日期, string str姓名, ref string str帮忙时间, List<_配货绩效_员工月上班时间> _本月上班时间, List<_配货绩效_帮忙点货时间> _本月帮忙拣货时间)
+        /// <summary>
+        /// 配货绩效-计算上班时间和帮忙时间
+        /// </summary>
+        /// <param name="d绩效日期"></param>
+        /// <param name="str姓名"></param>
+        /// <param name="str帮忙时间"></param>
+        /// <param name="_本月上班时间"></param>
+        /// <param name="_本月帮忙拣货时间"></param>
+        /// <returns></returns>
+        private decimal PickingPerfCalcWorkingHours(DateTime d绩效日期, string str姓名, ref string str帮忙时间, List<_配货绩效_员工月上班时间> _本月上班时间, List<_配货绩效_帮忙点货时间> _本月帮忙拣货时间)
         {
+            //if (str姓名 == "韩东霞")
+            //{
+
+            //}
 
             d绩效日期 = d绩效日期.Date;
             if (_本月上班时间 != null && _本月上班时间.Count > 0)
             {
                 var refer工作时间 = _本月上班时间.Where(x => x._姓名 == str姓名).FirstOrDefault();
-                var refer帮忙时间 = _本月帮忙拣货时间.Where(x => x._姓名 == str姓名 && x._日期 == d绩效日期).FirstOrDefault();
+                var refer帮忙时间 = _本月帮忙拣货时间.Where(x => x._姓名 == str姓名).FirstOrDefault();
                 if (refer工作时间 != null)
                 {
                     decimal d上班时间 = 0;

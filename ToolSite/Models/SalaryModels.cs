@@ -214,9 +214,6 @@ namespace ToolSite.Models.Salary
         [ExcelColumn("姓名")]
         public string _姓名 { get; set; }
 
-        [ExcelColumn("日期")]
-        public DateTime _日期 { get; set; }
-
         [ExcelColumn("工作时间")]
         public DateTime _工作时间 { get; set; }
 
