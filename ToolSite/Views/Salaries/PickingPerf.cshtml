@@ -6,13 +6,16 @@
 
 @section scripts{
     <script>
-        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/on", "dojo/dom", "dojo/topic"], function (ready, registry, iframe, on, dom, topic) {
+        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/request/xhr", "dojo/on", "dojo/dom", "dojo/topic", "dojo/dom-form"], function (ready, registry, iframe, xhr, on, dom, topic, domForm) {
             ready(function () {
+                var currentDate = new Date();
                 on(dom.byId("nav"), "click", function () { location.href = "/"; });
                 registry.byId("btnWorkHoursUpload").on("click", uploadWorkHoursMetadata);
                 registry.byId("btnProcesingPerfData").on("click", uploadDailyPerfMetadata);
-                registry.byId("workHourMonth").set("value", new Date().getMonth() + 1);//初始化月工作时间的月份信息
-                registry.byId("pickingDate").set("value", new Date());//初始化月工作时间的月份信息
+                registry.byId("btnDownloadDailyPerfData").on("click", downloadDailyPerfTable);
+                registry.byId("workHourMonth").set("value", currentDate.getMonth() + 1);//初始化月工作时间的月份信息
+                registry.byId("pickingDate").set("value", currentDate);//初始化月工作时间的月份信息
+                registry.byId("dowloadPickingDate").set("value", currentDate);//初始化月工作时间的月份信息
             });//ready
 
             function uploadWorkHoursMetadata() {
@@ -52,8 +55,21 @@
                 var wform = registry.byId("perfDownloadForm");
                 if (!wform.validate()) return;
 
-
-
+                topic.publish("DataProcessing");
+                xhr.post("/Salaries/DownloadSpecifyDatePerf", {
+                    handleAs: "text", headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }, data: domForm.toQuery("perfDownloadForm")
+                }).then(function (path) {
+                    topic.publish("DataProcessCompleted");
+                    if (path != "") 
+                        topic.publish("DownloadProcessExel", path);
+                    else 
+                        topic.publish("ReportMessage", "没有查找到该日期的绩效信息");
+                }, function (err) {
+                    topic.publish("DataProcessCompleted");
+                    topic.publish("ReportErrorMessage", err);
+                });
             }//downloadDailyPerfTable
         });//require
     </script>

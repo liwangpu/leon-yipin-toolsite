@@ -641,6 +641,39 @@ namespace ToolSite.Controllers
             return PartialView("_MetadataDowload");
         }
 
+
+        /// <summary>
+        /// 下载指定日期的绩效
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<string> DownloadSpecifyDatePerf()
+        {
+            var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
+            var historyPickingPerfCacheFolder = Path.Combine(env.WebRootPath, "cache", HistoryPickingPerfMonthlyHoursCacheFolder);//历史配货绩效存储
+            var dowloadPickingDate = Convert.ToDateTime(Request.Form["dowloadPickingDate"]);
+            var resultFileName = $"{dowloadPickingDate.ToString("yyyy-MM-dd")}[当天配货绩效].xlsx";
+            var resultFilePath = Path.Combine(tmpFolder, resultFileName);
+            var historyPickingPerfCacheFilePath = Path.Combine(historyPickingPerfCacheFolder, $"{dowloadPickingDate.ToString("yyyy-MM")}.json");
+            var historyPickingPerf = new _配货绩效_全月绩效结果();
+            if (System.IO.File.Exists(historyPickingPerfCacheFilePath))
+            {
+                using (var fs = new StreamReader(historyPickingPerfCacheFilePath, Encoding.UTF8))
+                {
+                    var json = fs.ReadToEnd();
+                    historyPickingPerf = JsonConvert.DeserializeObject<_配货绩效_全月绩效结果>(json);
+                }
+            }
+
+            if (historyPickingPerf.Perf.ContainsKey(dowloadPickingDate.Day))
+                GenerateDailyPerfExcelTable(resultFilePath, historyPickingPerf.Perf[dowloadPickingDate.Day]);
+            else
+                return string.Empty;
+
+            return resultFileName;
+        }
+
+
         /// <summary>
         /// 根据绩效结果生成表格
         /// </summary>
@@ -648,6 +681,8 @@ namespace ToolSite.Controllers
         /// <param name="datas"></param>
         private void GenerateDailyPerfExcelTable(string path, List<_配货绩效_配货绩效结果> datas)
         {
+            if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+
             #region 生成绩效表格
             using (var package = new ExcelPackage(new FileInfo(path)))
             {
