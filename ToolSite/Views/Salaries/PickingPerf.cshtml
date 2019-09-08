@@ -114,6 +114,10 @@
                         for (var i = 0, len = arr.length; i < len; i++) {
                             domConstruct.place("<span>" + arr[i] + "</span>", container);
                         }
+
+                        var currentDate = registry.byId("dowloadPickingDate").get("value");
+                        var daysOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+                        domConstruct.place("<p>" + "该月份共有" + daysOfMonth + "天,当前该月有" + arr.length + "天的绩效信息" + "</p>", container);
                     }
                     else {
                         domConstruct.place("<span>该月份没有绩效信息哦</span>", container);
