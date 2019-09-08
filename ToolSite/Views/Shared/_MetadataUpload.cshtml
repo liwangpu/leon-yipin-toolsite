@@ -19,7 +19,7 @@
 
         div.nav {
             display: flex;
-            width:60px;
+            width: 60px;
             flex-flow: row;
             align-items: center;
             padding-bottom: .3rem;
@@ -140,7 +140,24 @@
                 color: red;
             }
 
-        div.loadingLayer {
+            div.metadata-des > table.field-des {
+                width: 100%;
+                border: 1px solid #D0D0D0;
+                border-collapse: collapse;
+                margin-bottom: .5rem;
+            }
+
+                div.metadata-des > table.field-des td {
+                    border: 1px solid #D0D0D0;
+                    padding: .1rem;
+                }
+
+                    div.metadata-des > table.field-des td.title {
+                        padding: .2rem 1rem;
+                        color: orange;
+                    }
+
+        div .loadingLayer {
             display: flex;
             flex-flow: row;
             justify-content: center;
