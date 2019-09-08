@@ -404,8 +404,7 @@ namespace ToolSite.Controllers
         /// <returns></returns>
         [HttpPost]
         public async Task<PartialViewResult> DailyWorkingHoursHandler()
-        {
-            var resultFileName = Guid.NewGuid().ToString() + ".xlsx";
+        {      
             var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
             var workingHoursCacheFolder = Path.Combine(env.WebRootPath, "cache", PickingPerfMonthlyWorkingHoursCacheFolder);
             var historyPickingPerfCacheFolder = Path.Combine(env.WebRootPath, "cache", HistoryPickingPerfMonthlyHoursCacheFolder);//历史配货绩效存储
@@ -413,13 +412,14 @@ namespace ToolSite.Controllers
             var pickingFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var randomFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var areaRepFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
-            var helpHoursFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
-            var dailyPerfFilePath = Path.Combine(tmpFolder, resultFileName);
+            var helpHoursFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");       
             var paperAmount = Convert.ToDouble(Request.Form["paperAmount"]);//张数定值
             var paperRate = Convert.ToDouble(Request.Form["paperRate"]);//张数占比
             var pickingAmount = Convert.ToDouble(Request.Form["pickingAmount"]);//数量定值
             var pickingRate = Convert.ToDouble(Request.Form["pickingRate"]);//数量占比
             var perfDate = Convert.ToDateTime(Request.Form["pickingDate"]);
+            var resultFileName = $"{perfDate.ToString("yyyy-MM-dd")}[当天配货绩效].xlsx";
+            var dailyPerfFilePath = Path.Combine(tmpFolder, resultFileName);
             var list拣货单 = new List<_配货绩效_拣货单>();
             var list乱单 = new List<_配货绩效_乱单>();
             var list人员负责库位信息 = new List<_配货绩效_拣货人员配置信息>();
@@ -741,6 +741,39 @@ namespace ToolSite.Controllers
             }
 
             return string.Empty;
+        }
+
+        /// <summary>
+        /// 查看某个月份的所有绩效信息
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public IEnumerable<string> WatchWholeMonthPerfMessage()
+        {
+            var perfs = new List<string>();
+            var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
+            var historyPickingPerfCacheFolder = Path.Combine(env.WebRootPath, "cache", HistoryPickingPerfMonthlyHoursCacheFolder);//历史配货绩效存储
+            var dowloadPickingDate = Convert.ToDateTime(Request.Form["dowloadPickingDate"]);
+            var resultFileName = $"{dowloadPickingDate.ToString("yyyy-MM")}[全月配货绩效].xlsx";
+            var resultFilePath = Path.Combine(tmpFolder, resultFileName);
+            var historyPickingPerfCacheFilePath = Path.Combine(historyPickingPerfCacheFolder, $"{dowloadPickingDate.ToString("yyyy-MM")}.json");
+            var historyPickingPerf = new _配货绩效_全月绩效结果();
+
+            #region 加载缓存结果
+            if (System.IO.File.Exists(historyPickingPerfCacheFilePath))
+            {
+                using (var fs = new StreamReader(historyPickingPerfCacheFilePath, Encoding.UTF8))
+                {
+                    var json = fs.ReadToEnd();
+                    historyPickingPerf = JsonConvert.DeserializeObject<_配货绩效_全月绩效结果>(json);
+                }
+            }
+            else
+                return new List<string>();
+            #endregion
+
+            var prefx = dowloadPickingDate.ToString("yyyy-MM");
+            return historyPickingPerf.Perf.Keys.ToList().OrderBy(x => x).Select(x => prefx + "-" + x.ToString().PadLeft(2, '0'));
         }
 
         /// <summary>

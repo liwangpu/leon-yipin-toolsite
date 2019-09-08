@@ -4,9 +4,21 @@
     Layout = "~/Views/Shared/_MetadataUpload.cshtml";
 }
 
+@section styles{
+    <style>
+        div.wholeMonthPerfs {
+            padding-left: 1rem;
+        }
+
+            div.wholeMonthPerfs > span {
+                padding-right: 1rem;
+            }
+    </style>
+}
+
 @section scripts{
     <script>
-        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/request/xhr", "dojo/on", "dojo/dom", "dojo/topic", "dojo/dom-form"], function (ready, registry, iframe, xhr, on, dom, topic, domForm) {
+        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/request/xhr", "dojo/on", "dojo/dom", "dojo/topic", "dojo/dom-form", "dojo/dom-construct"], function (ready, registry, iframe, xhr, on, dom, topic, domForm, domConstruct) {
             ready(function () {
                 var currentDate = new Date();
                 on(dom.byId("nav"), "click", function () { location.href = "/"; });
@@ -36,6 +48,13 @@
                 });
             }//uploadWorkHoursMetadata
 
+            function prepareDowloadPerfMessage(url, handleAs) {
+                return xhr.post(url ? url : "/Salaries/DownloadSpecifyDatePerf", {
+                    handleAs: handleAs ? handleAs : "text", headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }, data: domForm.toQuery("perfDownloadForm")
+                });
+            }//prepareDowloadPerfMessage
 
             function uploadDailyPerfMetadata() {
                 var wform = registry.byId("dailyPerfForm");
@@ -58,11 +77,7 @@
                 if (!wform.validate()) return;
 
                 topic.publish("DataProcessing");
-                xhr.post("/Salaries/DownloadSpecifyDatePerf", {
-                    handleAs: "text", headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }, data: domForm.toQuery("perfDownloadForm")
-                }).then(function (path) {
+                prepareDowloadPerfMessage().then(function (path) {
                     topic.publish("DataProcessCompleted");
                     if (path != "")
                         topic.publish("DownloadProcessExel", path);
@@ -76,11 +91,7 @@
 
             function downloadMonthlyPerfTable() {
                 topic.publish("DataProcessing");
-                xhr.post("/Salaries/DownloadMonthPerf", {
-                    handleAs: "text", headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }, data: domForm.toQuery("perfDownloadForm")
-                }).then(function (path) {
+                prepareDowloadPerfMessage("/Salaries/DownloadMonthPerf").then(function (path) {
                     topic.publish("DataProcessCompleted");
                     if (path != "")
                         topic.publish("DownloadProcessExel", path);
@@ -95,7 +106,23 @@
             function watchWholeMonthPerfMessage() {
                 var wform = registry.byId("perfDownloadForm");
                 if (!wform.validate()) return;
-
+                topic.publish("DataProcessing");
+                prepareDowloadPerfMessage("/Salaries/WatchWholeMonthPerfMessage", "json").then(function (arr) {
+                    var container = dom.byId("wholeMonthPerfs");
+                    domConstruct.empty(container);
+                    if (arr && arr.length > 0) {
+                        for (var i = 0, len = arr.length; i < len; i++) {
+                            domConstruct.place("<span>" + arr[i] + "</span>", container);
+                        }
+                    }
+                    else {
+                        domConstruct.place("<span>该月份没有绩效信息哦</span>", container);
+                    }
+                    topic.publish("DataProcessCompleted");
+                }, function (err) {
+                    topic.publish("DataProcessCompleted");
+                    topic.publish("ReportErrorMessage", err);
+                });
             }//watchWholeMonthPerfMessage
         });//require
     </script>
@@ -180,6 +207,7 @@
             <button data-dojo-type="dijit/form/Button" id="btnDownloadDailyPerfData">下载当天绩效</button>
             <button data-dojo-type="dijit/form/Button" id="btnDownloadMonthlyPerfData">下载全月绩效</button>
             <p class="tip-link" id="watchWholeMonthPerf">我想看看和上面这个指定“绩效日期”月份相关的所有历史绩效信息</p>
+            <div class="wholeMonthPerfs" id="wholeMonthPerfs"></div>
         </form>
     </div>
 }
