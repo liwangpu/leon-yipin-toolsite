@@ -641,13 +641,12 @@ namespace ToolSite.Controllers
             return PartialView("_MetadataDowload");
         }
 
-
         /// <summary>
         /// 下载指定日期的绩效
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        public async Task<string> DownloadSpecifyDatePerf()
+        public string DownloadSpecifyDatePerf()
         {
             var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
             var historyPickingPerfCacheFolder = Path.Combine(env.WebRootPath, "cache", HistoryPickingPerfMonthlyHoursCacheFolder);//历史配货绩效存储
@@ -656,6 +655,8 @@ namespace ToolSite.Controllers
             var resultFilePath = Path.Combine(tmpFolder, resultFileName);
             var historyPickingPerfCacheFilePath = Path.Combine(historyPickingPerfCacheFolder, $"{dowloadPickingDate.ToString("yyyy-MM")}.json");
             var historyPickingPerf = new _配货绩效_全月绩效结果();
+
+            #region 加载缓存结果
             if (System.IO.File.Exists(historyPickingPerfCacheFilePath))
             {
                 using (var fs = new StreamReader(historyPickingPerfCacheFilePath, Encoding.UTF8))
@@ -664,15 +665,83 @@ namespace ToolSite.Controllers
                     historyPickingPerf = JsonConvert.DeserializeObject<_配货绩效_全月绩效结果>(json);
                 }
             }
+            #endregion
 
             if (historyPickingPerf.Perf.ContainsKey(dowloadPickingDate.Day))
+            {
                 GenerateDailyPerfExcelTable(resultFilePath, historyPickingPerf.Perf[dowloadPickingDate.Day]);
-            else
-                return string.Empty;
+                return resultFileName;
+            }
 
-            return resultFileName;
+            return string.Empty;
         }
 
+        /// <summary>
+        /// 下载指定日期的全月绩效
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public string DownloadMonthPerf()
+        {
+            var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
+            var historyPickingPerfCacheFolder = Path.Combine(env.WebRootPath, "cache", HistoryPickingPerfMonthlyHoursCacheFolder);//历史配货绩效存储
+            var dowloadPickingDate = Convert.ToDateTime(Request.Form["dowloadPickingDate"]);
+            var resultFileName = $"{dowloadPickingDate.ToString("yyyy-MM")}[全月配货绩效].xlsx";
+            var resultFilePath = Path.Combine(tmpFolder, resultFileName);
+            var historyPickingPerfCacheFilePath = Path.Combine(historyPickingPerfCacheFolder, $"{dowloadPickingDate.ToString("yyyy-MM")}.json");
+            var historyPickingPerf = new _配货绩效_全月绩效结果();
+
+            #region 加载缓存结果
+            if (System.IO.File.Exists(historyPickingPerfCacheFilePath))
+            {
+                using (var fs = new StreamReader(historyPickingPerfCacheFilePath, Encoding.UTF8))
+                {
+                    var json = fs.ReadToEnd();
+                    historyPickingPerf = JsonConvert.DeserializeObject<_配货绩效_全月绩效结果>(json);
+                }
+            }
+            #endregion
+
+            var source = new List<_配货绩效_配货绩效结果>();
+            foreach (var item in historyPickingPerf.Perf)
+                source.AddRange(item.Value);
+
+            var datas = new List<_配货绩效_配货绩效结果>();
+            var expNames = source.Select(x => x._业绩归属人).Distinct().ToList();
+            expNames.ForEach(n =>
+            {
+                if (!string.IsNullOrWhiteSpace(n))
+                {
+                    var md = new _配货绩效_配货绩效结果();
+                    md._业绩归属人 = n;
+
+                    var defaultItem = source[0];
+                    md._d张数占比 = defaultItem._d张数占比;
+                    md._d张数定值 = defaultItem._d张数定值;
+                    md._d数量占比 = defaultItem._d数量占比;
+                    md._d数量定值 = defaultItem._d数量定值;
+
+
+                    md._购买总数量_正常 = source.Where(x => x._业绩归属人 == n).Select(x => x._购买总数量_正常).Sum();
+                    md._拣货单张数_正常 = source.Where(x => x._业绩归属人 == n).Select(x => x._拣货单张数_正常).Sum();
+                    md._购买总数量_乱单 = source.Where(x => x._业绩归属人 == n).Select(x => x._购买总数量_乱单).Sum();
+                    md._拣货单张数_乱单 = source.Where(x => x._业绩归属人 == n).Select(x => x._拣货单张数_乱单).Sum();
+
+                    md._分钟 = source.Where(x => x._业绩归属人 == n).Select(x => x._分钟).Sum();
+                    md._总时长 = source.Where(x => x._业绩归属人 == n).Select(x => x._小时).Sum().ToString();
+                    md._帮忙总时长 = source.Where(x => x._业绩归属人 == n).Select(x => Convert.ToDecimal(x._帮忙总时长)).Sum().ToString();
+                    datas.Add(md);
+                }
+            });
+
+            if (datas.Count > 0)
+            {
+                GenerateDailyPerfExcelTable(resultFilePath, datas);
+                return resultFileName;
+            }
+
+            return string.Empty;
+        }
 
         /// <summary>
         /// 根据绩效结果生成表格
