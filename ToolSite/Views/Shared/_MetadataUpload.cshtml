@@ -71,27 +71,20 @@
                 content: "● "
             }
 
-        a.tip-link {
+        p.tip-link {
             display: block;
             font-size: .8rem;
             color: green;
             padding-left: 2rem;
+            text-decoration: underline;
         }
 
-            a.tip-link::before {
+            p.tip-link::before {
                 content: "◆ "
             }
 
-            a.tip-link:hover {
-                color: green;
-            }
-
-            a.tip-link:active {
-                color: green;
-            }
-
-            a.tip-link:link {
-                color: green;
+            p.tip-link:hover {
+                cursor: pointer;
             }
 
         div .form-item {

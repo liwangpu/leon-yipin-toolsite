@@ -10,6 +10,7 @@
             ready(function () {
                 var currentDate = new Date();
                 on(dom.byId("nav"), "click", function () { location.href = "/"; });
+                on(dom.byId("watchWholeMonthPerf"), "click", watchWholeMonthPerfMessage);
                 registry.byId("btnWorkHoursUpload").on("click", uploadWorkHoursMetadata);
                 registry.byId("btnProcesingPerfData").on("click", uploadDailyPerfMetadata);
                 registry.byId("btnDownloadDailyPerfData").on("click", downloadDailyPerfTable);
@@ -91,6 +92,11 @@
                 });
             }//downloadMonthlyPerfTable
 
+            function watchWholeMonthPerfMessage() {
+                var wform = registry.byId("perfDownloadForm");
+                if (!wform.validate()) return;
+
+            }//watchWholeMonthPerfMessage
         });//require
     </script>
 }
@@ -173,7 +179,7 @@
 
             <button data-dojo-type="dijit/form/Button" id="btnDownloadDailyPerfData">下载当天绩效</button>
             <button data-dojo-type="dijit/form/Button" id="btnDownloadMonthlyPerfData">下载全月绩效</button>
-            <a class="tip-link" href="#">我想看看和上面这个指定“绩效日期”月份相关的所有历史绩效信息</a>
+            <p class="tip-link" id="watchWholeMonthPerf">我想看看和上面这个指定“绩效日期”月份相关的所有历史绩效信息</p>
         </form>
     </div>
 }
