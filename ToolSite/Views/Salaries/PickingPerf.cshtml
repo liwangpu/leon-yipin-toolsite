@@ -117,7 +117,7 @@
 
                         var currentDate = registry.byId("dowloadPickingDate").get("value");
                         var daysOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-                        domConstruct.place("<p>" + "该月份共有" + daysOfMonth + "天,当前该月有" + arr.length + "天的绩效信息" + "</p>", container);
+                        domConstruct.place("<p style='font-size:.8rem;color:blue;'>" + "该月份共有" + daysOfMonth + "天,当前该月有" + arr.length + "天的绩效信息" + "</p>", container);
                     }
                     else {
                         domConstruct.place("<span>该月份没有绩效信息哦</span>", container);
@@ -219,7 +219,8 @@
 @section description{
     <h4>使用说明:</h4>
     <p class="des">1. 软件会存储所有计算过的绩效信息，如果绩效表格不慎丢失,在“历史绩效下载”功能区再下载一次就好了</p>
-    <p class="des">2. 软件原数据表格都为xlsx，具体表格所需要的列信息如下：(注意：表格的列不需要按顺序，有这些列就好了,如果多其他列无所谓，如果没有特别说明，表格一般只包含一张表，表名不限)</p>
+    <p class="des warn">2. 软件原数据表格都为xlsx，具体表格所需要的列信息如下：(注意：表格的列不需要按顺序，有这些列就好了,如果多其他列无所谓。如果没有特别说明，表格一般只包含一张表，表名不限)</p>
+
     <table class="field-des">
         <tr>
             <td colspan="32" class="title">月上班时间表格示例</td>
