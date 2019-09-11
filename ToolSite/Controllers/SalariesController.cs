@@ -387,7 +387,7 @@ namespace ToolSite.Controllers
                         for (int idx = workHours.Count - 1; idx >= 0; idx--)
                             workHours[idx].GenerateWorkingTime();
                         var json = JsonConvert.SerializeObject(workHours);
-                        var workHoursCacheFilePath = Path.Combine(workingHoursCacheFolder, monthStr + ".json");
+                        var workHoursCacheFilePath = Path.Combine(workingHoursCacheFolder,monthStr + ".json");
                         using (var fs = new StreamWriter(workHoursCacheFilePath, false, Encoding.UTF8))
                             fs.Write(json);
                     }
