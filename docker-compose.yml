@@ -9,6 +9,8 @@ services:
       dockerfile: ToolSite/Dockerfile
     volumes:
       - "/var/leon-test/my-test-toolsite/wwwroot/tmp:/app/wwwroot/tmp"
+      - "/var/leon-test/my-test-toolsite/cache:/app/wwwroot/cache"
+      - "/var/leon-test/my-test-toolsite/logs:/app/logs"
     ports:
       - "9871:80"
     restart: always

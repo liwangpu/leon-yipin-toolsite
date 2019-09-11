@@ -150,7 +150,7 @@
                 div.metadata-des > table.field-des td {
                     border: 1px solid #D0D0D0;
                     padding: .1rem;
-                    font-size:.8rem;
+                    font-size: .8rem;
                 }
 
                     div.metadata-des > table.field-des td.title {
@@ -218,7 +218,7 @@
 
             function reportErrorMessage(message) {
                 var wdialog = registry.byId("rpMessageDialog");
-                wdialog.set("content", "数据处理中出现异常,请把表格转发给管理员检查错误信息!");
+                wdialog.set("content", "数据处理中出现异常,可能表格中有不规范的数据,请把表格转发给管理员检查错误信息(不过在此之前,请再尝试上传数据一两次,确保不是因为选错表格导致的)!");
                 wdialog.show();
             }//reportErrorMessage
 

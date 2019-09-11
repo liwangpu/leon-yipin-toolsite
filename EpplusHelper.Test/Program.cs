@@ -10,22 +10,34 @@ namespace EpplusHelper.Test
         {
             try
             {
-                var tablePath = @"C:\Users\Leon\Desktop\昆山全部库存.xlsx";
+                //var tablePath = @"C:\Users\Leon\Desktop\昆山全部库存.xlsx";
 
-                using (var package = new ExcelPackage(new FileInfo(tablePath)))
-                {
-                    var dataSheet = package.Workbook.Worksheets[0];
+                //using (var package = new ExcelPackage(new FileInfo(tablePath)))
+                //{
+                //    var dataSheet = package.Workbook.Worksheets[0];
 
-                    var list = SheetReader<_库存明细>.From(dataSheet);
-
-
-
-
-                }
+                //    var list = SheetReader<_库存明细>.From(dataSheet);
 
 
 
 
+                //}
+
+
+                var c1 = new _库存明细();
+                var c2 = new _库存明细();
+                var c1copy = c1;
+
+                var c1h = c1.GetHashCode();
+                var c11h = c1.GetHashCode();
+                var c11copy = c1.GetHashCode();
+
+
+
+
+
+
+                var c2h = c2.GetHashCode();
 
 
 
