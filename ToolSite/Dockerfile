@@ -1,9 +1,9 @@
 FROM microsoft/dotnet:2.2-aspnetcore-runtime AS base
 WORKDIR /app
-RUN apt-get update \
-    && apt-get install -y --allow-unauthenticated \
-   		libgdiplus \
-     && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update \
+#     && apt-get install -y --allow-unauthenticated \
+#    		libgdiplus \
+#      && rm -rf /var/lib/apt/lists/*
 EXPOSE 80
 
 FROM microsoft/dotnet:2.2-sdk AS build

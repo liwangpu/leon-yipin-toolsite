@@ -8,18 +8,18 @@
     <script>
         require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/on", "dojo/dom", "dojo/topic"], function (ready, registry, iframe, on, dom, topic) {
             ready(function () {
-                var wbtnDataProcessing = registry.byId("btnDataProcessing");
-                wbtnDataProcessing.on("click", processingMetadata);
+                registry.byId("btnExtractSingleArea").on("click", extractSingleArea);
+                registry.byId("btnExtractMixtureArea").on("click", extractMixtureArea);
                 on(dom.byId("nav"), "click", function () { location.href = "/"; });
             });//ready
 
-            function processingMetadata() {
+            function extractSingleArea() {
                 var wform = registry.byId("uploadBoxForm");
                 var valid = wform.validate();
                 if (!valid) return;
 
                 topic.publish("DataProcessing");
-                iframe("/Orders/ExtractAreaHandle", {
+                iframe("/Orders/ExtractSingleAreaHandle", {
                     form: "uploadBoxForm"
                 }).then(function (path) {
                     topic.publish("DownloadProcessExel", path);
@@ -28,7 +28,30 @@
                     topic.publish("DataProcessCompleted");
                     topic.publish("ReportErrorMessage", err);
                 });
-            }//processingMetadata
+            }//extractSingleArea
+
+            function extractMixtureArea() {
+                var wform = registry.byId("uploadBoxForm");
+                var valid = wform.validate();
+                if (!valid) return;
+
+                if (!wform.value.area) {
+                    topic.publish("ReportMessage", "混合区域提取计算时,筛选区域不能为空");
+                    return;
+                }
+
+                topic.publish("DataProcessing");
+                iframe("/Orders/ExtractMixtureAreaHandle", {
+                    form: "uploadBoxForm"
+                }).then(function (path) {
+                    topic.publish("DownloadProcessExel", path);
+                    topic.publish("DataProcessCompleted");
+                }, function (err) {
+                    topic.publish("DataProcessCompleted");
+                    topic.publish("ReportErrorMessage", err);
+                });
+            }//extractMixtureArea
+
         });//require
     </script>
 }
@@ -43,7 +66,8 @@
             <label>筛选区域</label>
             <input type="text" data-dojo-type="dijit/form/TextBox" data-dojo-props="uppercase:true" name="area" id="area" placeholder="逗号分隔的区域名称" />
         </div>
-        <button data-dojo-type="dijit/form/Button" id="btnDataProcessing">数据处理</button>
+        <button data-dojo-type="dijit/form/Button" id="btnExtractSingleArea">单区域提取</button>
+        <button data-dojo-type="dijit/form/Button" id="btnExtractMixtureArea">混合区域提取</button>
     </form>
 }
 
