@@ -3,7 +3,7 @@ version: '3.4'
 services:
   my-test-toolsite:
     container_name: my-test-toolsite-c
-    image: my-test-toolsite:latest
+    image: registry.cn-hangzhou.aliyuncs.com/leon-pu/yipin-toolsite:latest
     build:
       context: .
       dockerfile: ToolSite/Dockerfile
