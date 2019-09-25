@@ -852,7 +852,8 @@ namespace ToolSite.Controllers
                 }
                 #endregion
 
-                sheet1.Cells[sheet1.Dimension.Address].AutoFitColumns();
+                ////////linux系统里面自动适应列宽有bug
+                //////sheet1.Cells[sheet1.Dimension.Address].AutoFitColumns();
 
                 package.Save();
             }
