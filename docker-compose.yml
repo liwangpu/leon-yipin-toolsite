@@ -1,16 +1,16 @@
 version: '3.4'
 
 services:
-  my-test-toolsite:
-    container_name: my-test-toolsite-c
+  yipin-toolsite:
+    container_name: yipin-toolsite-c
     image: registry.cn-hangzhou.aliyuncs.com/leon-pu/yipin-toolsite:latest
     build:
       context: .
       dockerfile: ToolSite/Dockerfile
     volumes:
-      - "/var/leon-test/my-test-toolsite/wwwroot/tmp:/app/wwwroot/tmp"
-      - "/var/leon-test/my-test-toolsite/cache:/app/wwwroot/cache"
-      - "/var/leon-test/my-test-toolsite/logs:/app/logs"
+      - "/var/yipin/toolsite/wwwroot/tmp:/app/wwwroot/tmp"
+      - "/var/yipin/toolsite/cache:/app/wwwroot/cache"
+      - "/var/yipin/toolsite/logs:/app/logs"
     ports:
       - "9871:80"
     restart: always
