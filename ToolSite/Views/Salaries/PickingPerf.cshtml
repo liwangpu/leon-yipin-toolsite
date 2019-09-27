@@ -13,6 +13,10 @@
             div.wholeMonthPerfs > span {
                 padding-right: 1rem;
             }
+
+        span#watchWholeMonthPerf:hover {
+            cursor: pointer;
+        }
     </style>
 }
 
@@ -210,7 +214,9 @@
 
             <button data-dojo-type="dijit/form/Button" id="btnDownloadDailyPerfData">下载当天绩效</button>
             <button data-dojo-type="dijit/form/Button" id="btnDownloadMonthlyPerfData">下载全月绩效</button>
-            <p class="tip-link" id="watchWholeMonthPerf">我想看看和上面这个指定“绩效日期”月份相关的所有历史绩效信息</p>
+            <p class="tip-link">
+                <span id="watchWholeMonthPerf">我想看看和上面这个指定“绩效日期”月份相关的所有历史绩效信息</span>
+            </p>
             <div class="wholeMonthPerfs" id="wholeMonthPerfs"></div>
         </form>
     </div>
