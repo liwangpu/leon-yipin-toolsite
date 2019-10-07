@@ -70,6 +70,7 @@
                 }).then(function (path) {
                     topic.publish("DownloadProcessExel", path);
                     topic.publish("DataProcessCompleted");
+                    wform.reset();
                 }, function (err) {
                     topic.publish("DataProcessCompleted");
                     topic.publish("ReportErrorMessage", err);

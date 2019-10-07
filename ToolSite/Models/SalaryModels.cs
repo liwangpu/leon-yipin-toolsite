@@ -291,10 +291,21 @@ namespace ToolSite.Models.Salary
 
     public class _配货绩效_拣货人员配置信息
     {
+        private string str姓名 { get; set; }
+        private string str管理库位 { get; set; }
+
         [ExcelColumn("配货人员")]
-        public string _姓名 { get; set; }
+        public string _姓名
+        {
+            get { return str姓名; }
+            set { str姓名 = string.IsNullOrWhiteSpace(value) ? null : value; }
+        }
         [ExcelColumn("库位")]
-        public string 管理库位 { get; set; }
+        public string _管理库位
+        {
+            get { return str管理库位; }
+            set { str管理库位 = string.IsNullOrWhiteSpace(value) ? null : value; }
+        }
     }
 
     public class _配货绩效_配货绩效结果
@@ -403,6 +414,8 @@ namespace ToolSite.Models.Salary
                     return 0;
             }
         }
+
+        public int _绩效日期 { get; set; }
     }
 
     public class _配货绩效_全月绩效结果

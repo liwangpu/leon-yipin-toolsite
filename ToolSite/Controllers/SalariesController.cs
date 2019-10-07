@@ -387,7 +387,7 @@ namespace ToolSite.Controllers
                         for (int idx = workHours.Count - 1; idx >= 0; idx--)
                             workHours[idx].GenerateWorkingTime();
                         var json = JsonConvert.SerializeObject(workHours);
-                        var workHoursCacheFilePath = Path.Combine(workingHoursCacheFolder,monthStr + ".json");
+                        var workHoursCacheFilePath = Path.Combine(workingHoursCacheFolder, monthStr + ".json");
                         using (var fs = new StreamWriter(workHoursCacheFilePath, false, Encoding.UTF8))
                             fs.Write(json);
                     }
@@ -404,7 +404,7 @@ namespace ToolSite.Controllers
         /// <returns></returns>
         [HttpPost]
         public async Task<PartialViewResult> DailyWorkingHoursHandler()
-        {      
+        {
             var tmpFolder = Path.Combine(env.WebRootPath, "tmp");
             var workingHoursCacheFolder = Path.Combine(env.WebRootPath, "cache", PickingPerfMonthlyWorkingHoursCacheFolder);
             var historyPickingPerfCacheFolder = Path.Combine(env.WebRootPath, "cache", HistoryPickingPerfMonthlyHoursCacheFolder);//历史配货绩效存储
@@ -412,7 +412,7 @@ namespace ToolSite.Controllers
             var pickingFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var randomFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var areaRepFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
-            var helpHoursFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");       
+            var helpHoursFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var paperAmount = Convert.ToDouble(Request.Form["paperAmount"]);//张数定值
             var paperRate = Convert.ToDouble(Request.Form["paperRate"]);//张数占比
             var pickingAmount = Convert.ToDouble(Request.Form["pickingAmount"]);//数量定值
@@ -532,7 +532,7 @@ namespace ToolSite.Controllers
                         #region 抽取详细信息
                         {
                             var refLh = (from it in list拣货单
-                                         join s in list人员负责库位信息 on it._库位号 equals s.管理库位
+                                         join s in list人员负责库位信息 on it._库位号 equals s._管理库位
                                          where s._姓名 == name
                                          select it).ToList();
                             foreach (var deitem in refLh)
@@ -704,7 +704,14 @@ namespace ToolSite.Controllers
 
             var source = new List<_配货绩效_配货绩效结果>();
             foreach (var item in historyPickingPerf.Perf)
-                source.AddRange(item.Value);
+            {
+                for (int i = 0, len = item.Value.Count; i < len; i++)
+                {
+                    var it = item.Value[i];
+                    it._绩效日期 = item.Key;
+                    source.Add(it);
+                }
+            }
 
             var datas = new List<_配货绩效_配货绩效结果>();
             var expNames = source.Select(x => x._业绩归属人).Distinct().ToList();
@@ -729,14 +736,14 @@ namespace ToolSite.Controllers
 
                     md._分钟 = source.Where(x => x._业绩归属人 == n).Select(x => x._分钟).Sum();
                     md._总时长 = source.Where(x => x._业绩归属人 == n).Select(x => x._小时).Sum().ToString();
-                    md._帮忙总时长 = source.Where(x => x._业绩归属人 == n).Select(x => Convert.ToDecimal(x._帮忙总时长)).Sum().ToString();
+                    md._帮忙总时长 = source.Where(x => x._业绩归属人 == n).Select(x => string.IsNullOrWhiteSpace(x._帮忙总时长) ? 0 : decimal.Parse(x._帮忙总时长)).Sum().ToString();
                     datas.Add(md);
                 }
             });
 
             if (datas.Count > 0)
             {
-                GenerateDailyPerfExcelTable(resultFilePath, datas);
+                GenerateMonthlyPerfExcelTable(resultFilePath, datas, source.OrderBy(x => x._绩效日期).ToList(), historyPickingPerf);
                 return resultFileName;
             }
 
@@ -824,8 +831,8 @@ namespace ToolSite.Controllers
                     sheet1.Cells[rowIdx, 5].Value = curOrder._拣货单张数_正常;
                     sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_乱单;
                     sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数;
-                    sheet1.Cells[rowIdx, 8].Value = curOrder._帮忙总时长;
-                    sheet1.Cells[rowIdx, 9].Value = curOrder._总时长;
+                    sheet1.Cells[rowIdx, 8].Value = string.IsNullOrWhiteSpace(curOrder._帮忙总时长) ? 0 : decimal.Parse(curOrder._帮忙总时长);
+                    sheet1.Cells[rowIdx, 9].Value = string.IsNullOrWhiteSpace(curOrder._总时长) ? 0 : decimal.Parse(curOrder._总时长);
                     sheet1.Cells[rowIdx, 10].Value = curOrder._分钟;
                     sheet1.Cells[rowIdx, 11].Value = curOrder._拣货单效率;
                     sheet1.Cells[rowIdx, 12].Value = curOrder._购买数量效率;
@@ -854,6 +861,220 @@ namespace ToolSite.Controllers
 
                 ////////linux系统里面自动适应列宽有bug
                 //////sheet1.Cells[sheet1.Dimension.Address].AutoFitColumns();
+
+                package.Save();
+            }
+            #endregion
+        }
+
+        /// <summary>
+        /// 根据绩效结果生成表格
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="summary"></param>
+        /// <param name="details"></param>
+        private void GenerateMonthlyPerfExcelTable(string path, List<_配货绩效_配货绩效结果> summary, List<_配货绩效_配货绩效结果> details, _配货绩效_全月绩效结果 cache)
+        {
+            if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+
+            #region 生成绩效表格
+            using (var package = new ExcelPackage(new FileInfo(path)))
+            {
+                var workbox = package.Workbook;
+
+                #region 绩效汇总表
+                {
+                    var sheet1 = workbox.Worksheets.Add("当月汇总");
+
+                    #region 标题行
+                    sheet1.Cells[1, 1].Value = "姓名";
+                    sheet1.Cells[1, 2].Value = "拣货单数量";
+                    sheet1.Cells[1, 3].Value = "乱单数量";
+                    sheet1.Cells[1, 4].Value = "总数量";
+                    sheet1.Cells[1, 5].Value = "拣货单张数";
+                    sheet1.Cells[1, 6].Value = "乱单张数";
+                    sheet1.Cells[1, 7].Value = "总张数";
+                    sheet1.Cells[1, 8].Value = "帮忙总时长";
+                    sheet1.Cells[1, 9].Value = "工作总时长";
+                    sheet1.Cells[1, 10].Value = "分钟";
+                    sheet1.Cells[1, 11].Value = "拣货单效率";
+                    sheet1.Cells[1, 12].Value = "购买数量效率";
+                    sheet1.Cells[1, 13].Value = "小时";
+                    sheet1.Cells[1, 14].Value = "拣货单每小时";
+                    sheet1.Cells[1, 15].Value = "个数每小时";
+                    sheet1.Cells[1, 16].Value = "定值倍数";
+                    sheet1.Cells[1, 17].Value = "工资";
+
+                    #endregion
+
+                    #region 数据行
+                    for (int idx = 0, rowIdx = 2, len = summary.Count; idx < len; idx++)
+                    {
+                        var curOrder = summary[idx];
+                        sheet1.Cells[rowIdx, 1].Value = curOrder._业绩归属人;
+                        sheet1.Cells[rowIdx, 2].Value = curOrder._购买总数量_正常;
+                        sheet1.Cells[rowIdx, 3].Value = curOrder._购买总数量_乱单;
+                        sheet1.Cells[rowIdx, 4].Value = curOrder._购买总数量;
+                        sheet1.Cells[rowIdx, 5].Value = curOrder._拣货单张数_正常;
+                        sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_乱单;
+                        sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数;
+                        sheet1.Cells[rowIdx, 8].Value = string.IsNullOrWhiteSpace(curOrder._帮忙总时长) ? 0 : decimal.Parse(curOrder._帮忙总时长);
+                        sheet1.Cells[rowIdx, 9].Value = string.IsNullOrWhiteSpace(curOrder._总时长) ? 0 : decimal.Parse(curOrder._总时长);
+                        sheet1.Cells[rowIdx, 10].Value = curOrder._分钟;
+                        sheet1.Cells[rowIdx, 11].Value = curOrder._拣货单效率;
+                        sheet1.Cells[rowIdx, 12].Value = curOrder._购买数量效率;
+                        sheet1.Cells[rowIdx, 13].Value = curOrder._小时;
+                        sheet1.Cells[rowIdx, 14].Value = curOrder._拣货单每小时;
+                        sheet1.Cells[rowIdx, 15].Value = curOrder._个数每小时;
+                        sheet1.Cells[rowIdx, 16].Value = curOrder._定值倍数;
+                        sheet1.Cells[rowIdx, 17].Value = curOrder._工资;
+                        rowIdx++;
+                    }
+                    #endregion
+
+                    #region 全部边框
+                    {
+                        var endRow = sheet1.Dimension.End.Row;
+                        var endColumn = sheet1.Dimension.End.Column;
+                        using (var rng = sheet1.Cells[1, 1, endRow, endColumn])
+                        {
+                            rng.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            rng.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                            rng.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            rng.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        }
+
+                        //添加几个汇总计算
+                        sheet1.Cells[endRow + 1, 1].Value = "合计";
+                        sheet1.Cells[endRow + 1, 2].Formula = $"SUM(B2:B{endRow})";
+                        sheet1.Cells[endRow + 1, 3].Formula = $"SUM(C2:C{endRow})";
+                        sheet1.Cells[endRow + 1, 4].Formula = $"SUM(D2:D{endRow})";
+                        sheet1.Cells[endRow + 1, 5].Formula = $"SUM(E2:E{endRow})";
+                        sheet1.Cells[endRow + 1, 6].Formula = $"SUM(F2:F{endRow})";
+                        sheet1.Cells[endRow + 1, 7].Formula = $"SUM(G2:G{endRow})";
+                        sheet1.Cells[endRow + 1, 7].Formula = $"SUM(G2:G{endRow})";
+                        sheet1.Cells[endRow + 1, 17].Formula = $"SUM(Q2:Q{endRow})";
+                        using (var rng = sheet1.Cells[endRow + 1, 1, endRow + 1, 17])
+                        {
+                            rng.Style.Font.Color.SetColor(Color.Blue);//字体颜色
+                        }
+                    }
+                    #endregion
+                }
+                #endregion
+
+                #region 绩效详情表
+                {
+                    var sheet1 = workbox.Worksheets.Add("详情");
+
+                    #region 标题行
+                    sheet1.Cells[1, 1].Value = "姓名";
+                    sheet1.Cells[1, 2].Value = "拣货单数量";
+                    sheet1.Cells[1, 3].Value = "乱单数量";
+                    sheet1.Cells[1, 4].Value = "总数量";
+                    sheet1.Cells[1, 5].Value = "拣货单张数";
+                    sheet1.Cells[1, 6].Value = "乱单张数";
+                    sheet1.Cells[1, 7].Value = "总张数";
+                    sheet1.Cells[1, 8].Value = "帮忙总时长";
+                    sheet1.Cells[1, 9].Value = "工作总时长";
+                    sheet1.Cells[1, 10].Value = "分钟";
+                    sheet1.Cells[1, 11].Value = "拣货单效率";
+                    sheet1.Cells[1, 12].Value = "购买数量效率";
+                    sheet1.Cells[1, 13].Value = "小时";
+                    sheet1.Cells[1, 14].Value = "拣货单每小时";
+                    sheet1.Cells[1, 15].Value = "个数每小时";
+                    sheet1.Cells[1, 16].Value = "定值倍数";
+                    sheet1.Cells[1, 17].Value = "工资";
+                    sheet1.Cells[1, 18].Value = "日期";
+                    #endregion
+
+                    #region 数据行
+                    for (int idx = 0, rowIdx = 2, len = details.Count; idx < len; idx++)
+                    {
+                        var curOrder = details[idx];
+                        sheet1.Cells[rowIdx, 1].Value = curOrder._业绩归属人;
+                        sheet1.Cells[rowIdx, 2].Value = curOrder._购买总数量_正常;
+                        sheet1.Cells[rowIdx, 3].Value = curOrder._购买总数量_乱单;
+                        sheet1.Cells[rowIdx, 4].Value = curOrder._购买总数量;
+                        sheet1.Cells[rowIdx, 5].Value = curOrder._拣货单张数_正常;
+                        sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_乱单;
+                        sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数;
+                        sheet1.Cells[rowIdx, 8].Value = string.IsNullOrWhiteSpace(curOrder._帮忙总时长) ? 0 : decimal.Parse(curOrder._帮忙总时长);
+                        sheet1.Cells[rowIdx, 9].Value = string.IsNullOrWhiteSpace(curOrder._总时长) ? 0 : decimal.Parse(curOrder._总时长);
+                        sheet1.Cells[rowIdx, 10].Value = curOrder._分钟;
+                        sheet1.Cells[rowIdx, 11].Value = curOrder._拣货单效率;
+                        sheet1.Cells[rowIdx, 12].Value = curOrder._购买数量效率;
+                        sheet1.Cells[rowIdx, 13].Value = curOrder._小时;
+                        sheet1.Cells[rowIdx, 14].Value = curOrder._拣货单每小时;
+                        sheet1.Cells[rowIdx, 15].Value = curOrder._个数每小时;
+                        sheet1.Cells[rowIdx, 16].Value = curOrder._定值倍数;
+                        sheet1.Cells[rowIdx, 17].Value = curOrder._工资;
+                        sheet1.Cells[rowIdx, 18].Value = curOrder._绩效日期;
+                        rowIdx++;
+                    }
+                    #endregion
+
+                    #region 全部边框
+                    {
+                        var endRow = sheet1.Dimension.End.Row;
+                        var endColumn = sheet1.Dimension.End.Column;
+                        using (var rng = sheet1.Cells[1, 1, endRow, endColumn])
+                        {
+                            rng.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            rng.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                            rng.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            rng.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        }
+                    }
+                    #endregion
+                }
+                #endregion
+
+                #region 每日小计
+                {
+                    var sheet1 = workbox.Worksheets.Add("每日汇总");
+
+                    #region 标题行
+                    sheet1.Cells[1, 1].Value = "日期";
+                    sheet1.Cells[1, 2].Value = "拣货单数量";
+                    sheet1.Cells[1, 3].Value = "乱单数量";
+                    sheet1.Cells[1, 4].Value = "总数量";
+                    sheet1.Cells[1, 5].Value = "拣货单张数";
+                    sheet1.Cells[1, 6].Value = "乱单张数";
+                    sheet1.Cells[1, 7].Value = "总张数";
+                    #endregion
+
+                    #region 数据行
+                    var dates = cache.Perf.Keys.OrderBy(x => x).ToList();
+                    for (int idx = 0, rowIdx = 2, len = dates.Count; idx < len; idx++)
+                    {
+                        var it = cache.Perf[dates[idx]];
+                        sheet1.Cells[rowIdx, 1].Value = dates[idx];
+                        sheet1.Cells[rowIdx, 2].Value = it.Sum(x => x._购买总数量_正常);
+                        sheet1.Cells[rowIdx, 3].Value = it.Sum(x => x._购买总数量_乱单);
+                        sheet1.Cells[rowIdx, 4].Value = it.Sum(x => x._购买总数量);
+                        sheet1.Cells[rowIdx, 5].Value = it.Sum(x => x._拣货单张数_正常);
+                        sheet1.Cells[rowIdx, 6].Value = it.Sum(x => x._拣货单张数_乱单);
+                        sheet1.Cells[rowIdx, 7].Value = it.Sum(x => x._拣货单张数);
+                        rowIdx++;
+                    }
+                    #endregion
+
+                    #region 全部边框
+                    {
+                        var endRow = sheet1.Dimension.End.Row;
+                        var endColumn = sheet1.Dimension.End.Column;
+                        using (var rng = sheet1.Cells[1, 1, endRow, endColumn])
+                        {
+                            rng.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            rng.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                            rng.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            rng.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        }
+                    }
+                    #endregion
+                }
+                #endregion
 
                 package.Save();
             }
