@@ -232,6 +232,7 @@ namespace ToolSite.Models.Salary
         }
 
         public bool _乱单 { get; set; }
+        public bool _本楼层 { get; set; }
     }
 
     public class _配货绩效_乱单
@@ -242,7 +243,7 @@ namespace ToolSite.Models.Salary
         [ExcelColumn("库位号")]
         public string _完整库位号 { get; set; }
 
-        public List<_配货绩效_拣货单> ToData()
+        public virtual List<_配货绩效_拣货单> ToData()
         {
             var list = new List<_配货绩效_拣货单>();
             var _明细Arr = _商品明细.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -262,11 +263,34 @@ namespace ToolSite.Models.Salary
         }
     }
 
+    public class _配货绩效_本楼层乱单 : _配货绩效_乱单
+    {
+        public override List<_配货绩效_拣货单> ToData()
+        {
+            var list = new List<_配货绩效_拣货单>();
+            var _明细Arr = _商品明细.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            var _库位号Arr = _完整库位号.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            if (_明细Arr.Count == _库位号Arr.Count)
+            {
+                for (int idx = 0, len = _明细Arr.Count; idx < len; idx++)
+                {
+                    var model = new _配货绩效_拣货单();
+                    model._商品明细 = _明细Arr[idx] + ";";
+                    model._完整库位号 = _库位号Arr[idx] + ";";
+                    model._本楼层 = true;
+                    list.Add(model);
+                }
+            }
+            return list;
+        }
+    }
+
     public class _配货绩效_订单详情数据
     {
         public string SKU { get; set; }
         public double Amount { get; set; }
         public bool _乱单 { get; set; }
+        public bool _本楼层 { get; set; }
     }
 
     public class _配货绩效_帮忙点货时间
@@ -315,21 +339,23 @@ namespace ToolSite.Models.Salary
         {
             get
             {
-                return _购买总数量_正常 + _购买总数量_乱单;
+                return _购买总数量_正常 + _购买总数量_乱单 + _购买总数量_本楼层乱单;
             }
         }
         public double _拣货单张数
         {
             get
             {
-                return _拣货单张数_正常 + _拣货单张数_乱单;
+                return _拣货单张数_正常 + _拣货单张数_乱单 + _拣货单张数_本楼层乱单;
             }
         }
 
         public double _购买总数量_正常 { get; set; }
         public double _购买总数量_乱单 { get; set; }
+        public double _购买总数量_本楼层乱单 { get; set; }
         public double _拣货单张数_正常 { get; set; }
         public double _拣货单张数_乱单 { get; set; }
+        public double _拣货单张数_本楼层乱单 { get; set; }
 
         public string _总时长 { get; set; }
         public string _帮忙总时长 { get; set; }

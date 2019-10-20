@@ -179,6 +179,10 @@
                     <label for="orderRecord">帮忙时间</label>
                     <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'helpingHoursFile',accept:'.xlsx'"></div>
                 </div>
+                <div class="form-item">
+                    <label for="orderRecord">本楼层</label>
+                    <div data-dojo-type="mytool/singleUploader" data-dojo-props="name:'flowFile',accept:'.xlsx'"></div>
+                </div>
             </div>
             <div class="form-group">
                 <div class="form-item required">
@@ -200,6 +204,7 @@
                 <button data-dojo-type="dijit/form/Button" id="btnProcesingPerfData">绩效计算</button>
             </div>
             <p class="form-tip">帮忙时间如果当天没有可以不用上传</p>
+            <p class="form-tip">本楼层单子如果当天没有可以不用上传</p>
             <p class="form-tip">如果某天绩效忘记算了或者数据有改动，可以直接把数据上传再算一次</p>
             <p class="form-tip">如果想查看一下某个月份所有算过的绩效信息，可以在下面的“历史绩效下载”里面，随便选择这个月份的某个日期，然后点击“我想看看和上面这个指定“绩效日期”月份相关的所有历史绩效信息”这句话，就可以看到啦</p>
         </form>

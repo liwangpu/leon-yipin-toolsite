@@ -411,6 +411,7 @@ namespace ToolSite.Controllers
             if (!Directory.Exists(historyPickingPerfCacheFolder)) Directory.CreateDirectory(historyPickingPerfCacheFolder);
             var pickingFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var randomFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
+            var flowFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var areaRepFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var helpHoursFilePath = Path.Combine(tmpFolder, Guid.NewGuid().ToString() + ".xlsx");
             var paperAmount = Convert.ToDouble(Request.Form["paperAmount"]);//张数定值
@@ -422,6 +423,7 @@ namespace ToolSite.Controllers
             var dailyPerfFilePath = Path.Combine(tmpFolder, resultFileName);
             var list拣货单 = new List<_配货绩效_拣货单>();
             var list乱单 = new List<_配货绩效_乱单>();
+            var list本楼层乱单 = new List<_配货绩效_本楼层乱单>();
             var list人员负责库位信息 = new List<_配货绩效_拣货人员配置信息>();
             var list最终绩效 = new List<_配货绩效_配货绩效结果>();
             var list本月上班时间 = new List<_配货绩效_员工月上班时间>();
@@ -463,6 +465,26 @@ namespace ToolSite.Controllers
                     }
                     System.IO.File.Delete(randomFilePath);
                 }
+
+                //本楼层格式就是乱单,不一定有
+                var flowFile = files.FirstOrDefault(x => x.Name == "flowFile");
+                if (flowFile != null)
+                {
+                    using (var targetStream = System.IO.File.Create(flowFilePath))
+                        await flowFile.CopyToAsync(targetStream);
+                    using (var package = new ExcelPackage(new FileInfo(flowFilePath)))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        list本楼层乱单 = SheetReader<_配货绩效_本楼层乱单>.From(worksheet);
+                        //将乱单转换正常拣货单
+                        foreach (var item乱单 in list本楼层乱单)
+                        {
+                            list拣货单.AddRange(item乱单.ToData());
+                        }
+                    }
+                    System.IO.File.Delete(flowFilePath);
+                }
+
 
                 var areaRepFile = files.FirstOrDefault(x => x.Name == "areaRepFile");
                 if (areaRepFile != null)
@@ -547,6 +569,7 @@ namespace ToolSite.Controllers
                                         detail.SKU = arr[0].Trim();
                                         detail.Amount = Convert.ToDouble(arr[1]);
                                         detail._乱单 = deitem._乱单;
+                                        detail._本楼层 = deitem._本楼层;
                                         _订单详情数据.Add(detail);
                                     }
 
@@ -558,6 +581,7 @@ namespace ToolSite.Controllers
 
                         var list订单详情数据_拣货单 = _订单详情数据.Where(x => x._乱单 == false).ToList();
                         var list订单详情数据_乱单 = _订单详情数据.Where(x => x._乱单 == true).ToList();
+                        var list订单详情数据_本楼层乱单 = _订单详情数据.Where(x => x._本楼层 == true).ToList();
 
                         var str_帮忙总时长 = "";
                         decimal refTime = 0;
@@ -593,7 +617,8 @@ namespace ToolSite.Controllers
                         md._购买总数量_正常 = list订单详情数据_拣货单.Select(x => x.Amount).Sum();
                         md._拣货单张数_乱单 = list订单详情数据_乱单.Select(x => x.SKU).Distinct().Count();
                         md._购买总数量_乱单 = list订单详情数据_乱单.Select(x => x.Amount).Sum();
-
+                        md._拣货单张数_本楼层乱单 = list订单详情数据_本楼层乱单.Select(x => x.SKU).Distinct().Count();
+                        md._购买总数量_本楼层乱单 = list订单详情数据_本楼层乱单.Select(x => x.Amount).Sum();
 
                         md._总时长 = refTime.ToString();
                         md._帮忙总时长 = str_帮忙总时长;
@@ -803,20 +828,22 @@ namespace ToolSite.Controllers
                 sheet1.Cells[1, 1].Value = "姓名";
                 sheet1.Cells[1, 2].Value = "拣货单数量";
                 sheet1.Cells[1, 3].Value = "乱单数量";
-                sheet1.Cells[1, 4].Value = "总数量";
-                sheet1.Cells[1, 5].Value = "拣货单张数";
-                sheet1.Cells[1, 6].Value = "乱单张数";
-                sheet1.Cells[1, 7].Value = "总张数";
-                sheet1.Cells[1, 8].Value = "帮忙总时长";
-                sheet1.Cells[1, 9].Value = "工作总时长";
-                sheet1.Cells[1, 10].Value = "分钟";
-                sheet1.Cells[1, 11].Value = "拣货单效率";
-                sheet1.Cells[1, 12].Value = "购买数量效率";
-                sheet1.Cells[1, 13].Value = "小时";
-                sheet1.Cells[1, 14].Value = "拣货单每小时";
-                sheet1.Cells[1, 15].Value = "个数每小时";
-                sheet1.Cells[1, 16].Value = "定值倍数";
-                sheet1.Cells[1, 17].Value = "工资";
+                sheet1.Cells[1, 4].Value = "本楼层数量";
+                sheet1.Cells[1, 5].Value = "总数量";
+                sheet1.Cells[1, 6].Value = "拣货单张数";
+                sheet1.Cells[1, 7].Value = "乱单张数";
+                sheet1.Cells[1, 8].Value = "本楼层张数";
+                sheet1.Cells[1, 9].Value = "总张数";
+                sheet1.Cells[1, 10].Value = "帮忙总时长";
+                sheet1.Cells[1, 11].Value = "工作总时长";
+                sheet1.Cells[1, 12].Value = "分钟";
+                sheet1.Cells[1, 13].Value = "拣货单效率";
+                sheet1.Cells[1, 14].Value = "购买数量效率";
+                sheet1.Cells[1, 15].Value = "小时";
+                sheet1.Cells[1, 16].Value = "拣货单每小时";
+                sheet1.Cells[1, 17].Value = "个数每小时";
+                sheet1.Cells[1, 18].Value = "定值倍数";
+                sheet1.Cells[1, 19].Value = "工资";
 
                 #endregion
 
@@ -827,20 +854,22 @@ namespace ToolSite.Controllers
                     sheet1.Cells[rowIdx, 1].Value = curOrder._业绩归属人;
                     sheet1.Cells[rowIdx, 2].Value = curOrder._购买总数量_正常;
                     sheet1.Cells[rowIdx, 3].Value = curOrder._购买总数量_乱单;
-                    sheet1.Cells[rowIdx, 4].Value = curOrder._购买总数量;
-                    sheet1.Cells[rowIdx, 5].Value = curOrder._拣货单张数_正常;
-                    sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_乱单;
-                    sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数;
-                    sheet1.Cells[rowIdx, 8].Value = string.IsNullOrWhiteSpace(curOrder._帮忙总时长) ? 0 : decimal.Parse(curOrder._帮忙总时长);
-                    sheet1.Cells[rowIdx, 9].Value = string.IsNullOrWhiteSpace(curOrder._总时长) ? 0 : decimal.Parse(curOrder._总时长);
-                    sheet1.Cells[rowIdx, 10].Value = curOrder._分钟;
-                    sheet1.Cells[rowIdx, 11].Value = curOrder._拣货单效率;
-                    sheet1.Cells[rowIdx, 12].Value = curOrder._购买数量效率;
-                    sheet1.Cells[rowIdx, 13].Value = curOrder._小时;
-                    sheet1.Cells[rowIdx, 14].Value = curOrder._拣货单每小时;
-                    sheet1.Cells[rowIdx, 15].Value = curOrder._个数每小时;
-                    sheet1.Cells[rowIdx, 16].Value = curOrder._定值倍数;
-                    sheet1.Cells[rowIdx, 17].Value = curOrder._工资;
+                    sheet1.Cells[rowIdx, 4].Value = curOrder._购买总数量_本楼层乱单;
+                    sheet1.Cells[rowIdx, 5].Value = curOrder._购买总数量;
+                    sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_正常;
+                    sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数_乱单;
+                    sheet1.Cells[rowIdx, 8].Value = curOrder._拣货单张数_本楼层乱单;
+                    sheet1.Cells[rowIdx, 9].Value = curOrder._拣货单张数;
+                    sheet1.Cells[rowIdx, 10].Value = string.IsNullOrWhiteSpace(curOrder._帮忙总时长) ? 0 : decimal.Parse(curOrder._帮忙总时长);
+                    sheet1.Cells[rowIdx, 11].Value = string.IsNullOrWhiteSpace(curOrder._总时长) ? 0 : decimal.Parse(curOrder._总时长);
+                    sheet1.Cells[rowIdx, 12].Value = curOrder._分钟;
+                    sheet1.Cells[rowIdx, 13].Value = curOrder._拣货单效率;
+                    sheet1.Cells[rowIdx, 14].Value = curOrder._购买数量效率;
+                    sheet1.Cells[rowIdx, 15].Value = curOrder._小时;
+                    sheet1.Cells[rowIdx, 16].Value = curOrder._拣货单每小时;
+                    sheet1.Cells[rowIdx, 17].Value = curOrder._个数每小时;
+                    sheet1.Cells[rowIdx, 18].Value = curOrder._定值倍数;
+                    sheet1.Cells[rowIdx, 19].Value = curOrder._工资;
                     rowIdx++;
                 }
                 #endregion
@@ -890,20 +919,22 @@ namespace ToolSite.Controllers
                     sheet1.Cells[1, 1].Value = "姓名";
                     sheet1.Cells[1, 2].Value = "拣货单数量";
                     sheet1.Cells[1, 3].Value = "乱单数量";
-                    sheet1.Cells[1, 4].Value = "总数量";
-                    sheet1.Cells[1, 5].Value = "拣货单张数";
-                    sheet1.Cells[1, 6].Value = "乱单张数";
-                    sheet1.Cells[1, 7].Value = "总张数";
-                    sheet1.Cells[1, 8].Value = "帮忙总时长";
-                    sheet1.Cells[1, 9].Value = "工作总时长";
-                    sheet1.Cells[1, 10].Value = "分钟";
-                    sheet1.Cells[1, 11].Value = "拣货单效率";
-                    sheet1.Cells[1, 12].Value = "购买数量效率";
-                    sheet1.Cells[1, 13].Value = "小时";
-                    sheet1.Cells[1, 14].Value = "拣货单每小时";
-                    sheet1.Cells[1, 15].Value = "个数每小时";
-                    sheet1.Cells[1, 16].Value = "定值倍数";
-                    sheet1.Cells[1, 17].Value = "工资";
+                    sheet1.Cells[1, 4].Value = "本楼层数量";
+                    sheet1.Cells[1, 5].Value = "总数量";
+                    sheet1.Cells[1, 6].Value = "拣货单张数";
+                    sheet1.Cells[1, 7].Value = "乱单张数";
+                    sheet1.Cells[1, 8].Value = "本楼层张数";
+                    sheet1.Cells[1, 9].Value = "总张数";
+                    sheet1.Cells[1, 10].Value = "帮忙总时长";
+                    sheet1.Cells[1, 11].Value = "工作总时长";
+                    sheet1.Cells[1, 12].Value = "分钟";
+                    sheet1.Cells[1, 13].Value = "拣货单效率";
+                    sheet1.Cells[1, 14].Value = "购买数量效率";
+                    sheet1.Cells[1, 15].Value = "小时";
+                    sheet1.Cells[1, 16].Value = "拣货单每小时";
+                    sheet1.Cells[1, 17].Value = "个数每小时";
+                    sheet1.Cells[1, 18].Value = "定值倍数";
+                    sheet1.Cells[1, 19].Value = "工资";
 
                     #endregion
 
@@ -914,20 +945,22 @@ namespace ToolSite.Controllers
                         sheet1.Cells[rowIdx, 1].Value = curOrder._业绩归属人;
                         sheet1.Cells[rowIdx, 2].Value = curOrder._购买总数量_正常;
                         sheet1.Cells[rowIdx, 3].Value = curOrder._购买总数量_乱单;
-                        sheet1.Cells[rowIdx, 4].Value = curOrder._购买总数量;
-                        sheet1.Cells[rowIdx, 5].Value = curOrder._拣货单张数_正常;
-                        sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_乱单;
-                        sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数;
-                        sheet1.Cells[rowIdx, 8].Value = string.IsNullOrWhiteSpace(curOrder._帮忙总时长) ? 0 : decimal.Parse(curOrder._帮忙总时长);
-                        sheet1.Cells[rowIdx, 9].Value = string.IsNullOrWhiteSpace(curOrder._总时长) ? 0 : decimal.Parse(curOrder._总时长);
-                        sheet1.Cells[rowIdx, 10].Value = curOrder._分钟;
-                        sheet1.Cells[rowIdx, 11].Value = curOrder._拣货单效率;
-                        sheet1.Cells[rowIdx, 12].Value = curOrder._购买数量效率;
-                        sheet1.Cells[rowIdx, 13].Value = curOrder._小时;
-                        sheet1.Cells[rowIdx, 14].Value = curOrder._拣货单每小时;
-                        sheet1.Cells[rowIdx, 15].Value = curOrder._个数每小时;
-                        sheet1.Cells[rowIdx, 16].Value = curOrder._定值倍数;
-                        sheet1.Cells[rowIdx, 17].Value = curOrder._工资;
+                        sheet1.Cells[rowIdx, 4].Value = curOrder._购买总数量_本楼层乱单;
+                        sheet1.Cells[rowIdx, 5].Value = curOrder._购买总数量;
+                        sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_正常;
+                        sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数_乱单;
+                        sheet1.Cells[rowIdx, 8].Value = curOrder._拣货单张数_本楼层乱单;
+                        sheet1.Cells[rowIdx, 9].Value = curOrder._拣货单张数;
+                        sheet1.Cells[rowIdx, 10].Value = string.IsNullOrWhiteSpace(curOrder._帮忙总时长) ? 0 : decimal.Parse(curOrder._帮忙总时长);
+                        sheet1.Cells[rowIdx, 11].Value = string.IsNullOrWhiteSpace(curOrder._总时长) ? 0 : decimal.Parse(curOrder._总时长);
+                        sheet1.Cells[rowIdx, 12].Value = curOrder._分钟;
+                        sheet1.Cells[rowIdx, 13].Value = curOrder._拣货单效率;
+                        sheet1.Cells[rowIdx, 14].Value = curOrder._购买数量效率;
+                        sheet1.Cells[rowIdx, 15].Value = curOrder._小时;
+                        sheet1.Cells[rowIdx, 16].Value = curOrder._拣货单每小时;
+                        sheet1.Cells[rowIdx, 17].Value = curOrder._个数每小时;
+                        sheet1.Cells[rowIdx, 18].Value = curOrder._定值倍数;
+                        sheet1.Cells[rowIdx, 19].Value = curOrder._工资;
                         rowIdx++;
                     }
                     #endregion
@@ -971,21 +1004,23 @@ namespace ToolSite.Controllers
                     sheet1.Cells[1, 1].Value = "姓名";
                     sheet1.Cells[1, 2].Value = "拣货单数量";
                     sheet1.Cells[1, 3].Value = "乱单数量";
-                    sheet1.Cells[1, 4].Value = "总数量";
-                    sheet1.Cells[1, 5].Value = "拣货单张数";
-                    sheet1.Cells[1, 6].Value = "乱单张数";
-                    sheet1.Cells[1, 7].Value = "总张数";
-                    sheet1.Cells[1, 8].Value = "帮忙总时长";
-                    sheet1.Cells[1, 9].Value = "工作总时长";
-                    sheet1.Cells[1, 10].Value = "分钟";
-                    sheet1.Cells[1, 11].Value = "拣货单效率";
-                    sheet1.Cells[1, 12].Value = "购买数量效率";
-                    sheet1.Cells[1, 13].Value = "小时";
-                    sheet1.Cells[1, 14].Value = "拣货单每小时";
-                    sheet1.Cells[1, 15].Value = "个数每小时";
-                    sheet1.Cells[1, 16].Value = "定值倍数";
-                    sheet1.Cells[1, 17].Value = "工资";
-                    sheet1.Cells[1, 18].Value = "日期";
+                    sheet1.Cells[1, 4].Value = "本楼层数量";
+                    sheet1.Cells[1, 5].Value = "总数量";
+                    sheet1.Cells[1, 6].Value = "拣货单张数";
+                    sheet1.Cells[1, 7].Value = "乱单张数";
+                    sheet1.Cells[1, 8].Value = "本楼层张数";
+                    sheet1.Cells[1, 9].Value = "总张数";
+                    sheet1.Cells[1, 10].Value = "帮忙总时长";
+                    sheet1.Cells[1, 11].Value = "工作总时长";
+                    sheet1.Cells[1, 12].Value = "分钟";
+                    sheet1.Cells[1, 13].Value = "拣货单效率";
+                    sheet1.Cells[1, 14].Value = "购买数量效率";
+                    sheet1.Cells[1, 15].Value = "小时";
+                    sheet1.Cells[1, 16].Value = "拣货单每小时";
+                    sheet1.Cells[1, 17].Value = "个数每小时";
+                    sheet1.Cells[1, 18].Value = "定值倍数";
+                    sheet1.Cells[1, 19].Value = "工资";
+                    sheet1.Cells[1, 20].Value = "日期";
                     #endregion
 
                     #region 数据行
@@ -995,21 +1030,23 @@ namespace ToolSite.Controllers
                         sheet1.Cells[rowIdx, 1].Value = curOrder._业绩归属人;
                         sheet1.Cells[rowIdx, 2].Value = curOrder._购买总数量_正常;
                         sheet1.Cells[rowIdx, 3].Value = curOrder._购买总数量_乱单;
-                        sheet1.Cells[rowIdx, 4].Value = curOrder._购买总数量;
-                        sheet1.Cells[rowIdx, 5].Value = curOrder._拣货单张数_正常;
-                        sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_乱单;
-                        sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数;
-                        sheet1.Cells[rowIdx, 8].Value = string.IsNullOrWhiteSpace(curOrder._帮忙总时长) ? 0 : decimal.Parse(curOrder._帮忙总时长);
-                        sheet1.Cells[rowIdx, 9].Value = string.IsNullOrWhiteSpace(curOrder._总时长) ? 0 : decimal.Parse(curOrder._总时长);
-                        sheet1.Cells[rowIdx, 10].Value = curOrder._分钟;
-                        sheet1.Cells[rowIdx, 11].Value = curOrder._拣货单效率;
-                        sheet1.Cells[rowIdx, 12].Value = curOrder._购买数量效率;
-                        sheet1.Cells[rowIdx, 13].Value = curOrder._小时;
-                        sheet1.Cells[rowIdx, 14].Value = curOrder._拣货单每小时;
-                        sheet1.Cells[rowIdx, 15].Value = curOrder._个数每小时;
-                        sheet1.Cells[rowIdx, 16].Value = curOrder._定值倍数;
-                        sheet1.Cells[rowIdx, 17].Value = curOrder._工资;
-                        sheet1.Cells[rowIdx, 18].Value = curOrder._绩效日期;
+                        sheet1.Cells[rowIdx, 4].Value = curOrder._购买总数量_本楼层乱单;
+                        sheet1.Cells[rowIdx, 5].Value = curOrder._购买总数量;
+                        sheet1.Cells[rowIdx, 6].Value = curOrder._拣货单张数_正常;
+                        sheet1.Cells[rowIdx, 7].Value = curOrder._拣货单张数_乱单;
+                        sheet1.Cells[rowIdx, 8].Value = curOrder._拣货单张数_本楼层乱单;
+                        sheet1.Cells[rowIdx, 9].Value = curOrder._拣货单张数;
+                        sheet1.Cells[rowIdx, 10].Value = string.IsNullOrWhiteSpace(curOrder._帮忙总时长) ? 0 : decimal.Parse(curOrder._帮忙总时长);
+                        sheet1.Cells[rowIdx, 11].Value = string.IsNullOrWhiteSpace(curOrder._总时长) ? 0 : decimal.Parse(curOrder._总时长);
+                        sheet1.Cells[rowIdx, 12].Value = curOrder._分钟;
+                        sheet1.Cells[rowIdx, 13].Value = curOrder._拣货单效率;
+                        sheet1.Cells[rowIdx, 14].Value = curOrder._购买数量效率;
+                        sheet1.Cells[rowIdx, 15].Value = curOrder._小时;
+                        sheet1.Cells[rowIdx, 16].Value = curOrder._拣货单每小时;
+                        sheet1.Cells[rowIdx, 17].Value = curOrder._个数每小时;
+                        sheet1.Cells[rowIdx, 18].Value = curOrder._定值倍数;
+                        sheet1.Cells[rowIdx, 19].Value = curOrder._工资;
+                        sheet1.Cells[rowIdx, 20].Value = curOrder._绩效日期;
                         rowIdx++;
                     }
                     #endregion
@@ -1038,10 +1075,12 @@ namespace ToolSite.Controllers
                     sheet1.Cells[1, 1].Value = "日期";
                     sheet1.Cells[1, 2].Value = "拣货单数量";
                     sheet1.Cells[1, 3].Value = "乱单数量";
-                    sheet1.Cells[1, 4].Value = "总数量";
-                    sheet1.Cells[1, 5].Value = "拣货单张数";
-                    sheet1.Cells[1, 6].Value = "乱单张数";
-                    sheet1.Cells[1, 7].Value = "总张数";
+                    sheet1.Cells[1, 4].Value = "本楼层数量";
+                    sheet1.Cells[1, 5].Value = "总数量";
+                    sheet1.Cells[1, 6].Value = "拣货单张数";
+                    sheet1.Cells[1, 7].Value = "乱单张数";
+                    sheet1.Cells[1, 8].Value = "本楼层张数";
+                    sheet1.Cells[1, 9].Value = "总张数";
                     #endregion
 
                     #region 数据行
@@ -1052,10 +1091,12 @@ namespace ToolSite.Controllers
                         sheet1.Cells[rowIdx, 1].Value = dates[idx];
                         sheet1.Cells[rowIdx, 2].Value = it.Sum(x => x._购买总数量_正常);
                         sheet1.Cells[rowIdx, 3].Value = it.Sum(x => x._购买总数量_乱单);
-                        sheet1.Cells[rowIdx, 4].Value = it.Sum(x => x._购买总数量);
-                        sheet1.Cells[rowIdx, 5].Value = it.Sum(x => x._拣货单张数_正常);
-                        sheet1.Cells[rowIdx, 6].Value = it.Sum(x => x._拣货单张数_乱单);
-                        sheet1.Cells[rowIdx, 7].Value = it.Sum(x => x._拣货单张数);
+                        sheet1.Cells[rowIdx, 4].Value = it.Sum(x => x._购买总数量_本楼层乱单);
+                        sheet1.Cells[rowIdx, 5].Value = it.Sum(x => x._购买总数量);
+                        sheet1.Cells[rowIdx, 6].Value = it.Sum(x => x._拣货单张数_正常);
+                        sheet1.Cells[rowIdx, 7].Value = it.Sum(x => x._拣货单张数_乱单);
+                        sheet1.Cells[rowIdx, 8].Value = it.Sum(x => x._拣货单张数_本楼层乱单);
+                        sheet1.Cells[rowIdx, 9].Value = it.Sum(x => x._拣货单张数);
                         rowIdx++;
                     }
                     #endregion
