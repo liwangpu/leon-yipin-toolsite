@@ -72,22 +72,101 @@ namespace EpplusHelper
 
                 for (int idx = endRow; idx >= dataRow; idx--)
                 {
+                    if (idx == 45)
+                    {
+
+                    }
                     var instance = new T();
                     foreach (var item in mapping)
                     {
                         var cell = sheet.Cells[idx, item.Value.Item2];
                         if (cell.Value == null) continue;
 
+                        //GetValue说失败是忽略的,但是测试下来发现并不是
                         if (item.Value.Item1 == "int")
-                            mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<int>() });
+                        {
+                            try
+                            {
+                                mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<int>() });
+                            }
+                            catch
+                            {
+                                var str = cell.Value.ToString().Trim();
+                                if (!string.IsNullOrEmpty(str))
+                                {
+                                    int val = 0;
+                                    var b = int.TryParse(str, out val);
+                                    if (b)
+                                    {
+                                        mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { val });
+                                    }
+                                }
+                            }
+                        }
                         else if (item.Value.Item1 == "decimal")
-                            mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<decimal>() });
+                        {
+                            try
+                            {
+                                mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<decimal>() });
+                            }
+                            catch
+                            {
+                                var str = cell.Value.ToString().Trim();
+                                if (!string.IsNullOrEmpty(str))
+                                {
+                                    decimal val = 0;
+                                    var b = decimal.TryParse(str, out val);
+                                    if (b)
+                                    {
+                                        mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { val });
+                                    }
+                                }
+                            }
+                        }
                         else if (item.Value.Item1 == "double")
-                            mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<double>() });
+                        {
+                            try
+                            {
+                                mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<double>() });
+                            }
+                            catch
+                            {
+                                var str = cell.Value.ToString().Trim();
+                                if (!string.IsNullOrEmpty(str))
+                                {
+                                    double val = 0;
+                                    var b = double.TryParse(str, out val);
+                                    if (b)
+                                    {
+                                        mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { val });
+                                    }
+                                }
+                            }
+                        }
                         else if (item.Value.Item1 == "datetime")
-                            mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<DateTime>() });
+                        {
+                            try
+                            {
+                                mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<DateTime>() });
+                            }
+                            catch
+                            {
+                                var str = cell.Value.ToString().Trim();
+                                if (!string.IsNullOrEmpty(str))
+                                {
+                                    DateTime val;
+                                    var b = DateTime.TryParse(str, out val);
+                                    if (b)
+                                    {
+                                        mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { val });
+                                    }
+                                }
+                            }
+                        }
                         else
+                        {
                             mappingType.InvokeMember(item.Key, BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty, Type.DefaultBinder, instance, new object[] { cell.GetValue<string>() });
+                        }
 
                     }
 

@@ -385,7 +385,14 @@ namespace ToolSite.Controllers
                         var worksheet = package.Workbook.Worksheets[0];
                         workHours = SheetReader<_配货绩效_员工月上班时间>.From(worksheet);
                         for (int idx = workHours.Count - 1; idx >= 0; idx--)
+                        {
+                            if (string.IsNullOrWhiteSpace(workHours[idx]._姓名))
+                            {
+                                workHours.RemoveAt(idx);
+                                continue;
+                            }
                             workHours[idx].GenerateWorkingTime();
+                        }
                         var json = JsonConvert.SerializeObject(workHours);
                         var workHoursCacheFilePath = Path.Combine(workingHoursCacheFolder, monthStr + ".json");
                         using (var fs = new StreamWriter(workHoursCacheFilePath, false, Encoding.UTF8))
