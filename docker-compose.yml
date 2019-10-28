@@ -3,7 +3,7 @@ version: '3.4'
 services:
   yipin-toolsite:
     container_name: yipin-toolsite-c
-    image: registry.cn-hangzhou.aliyuncs.com/leon-pu/yipin-toolsite:latest
+    image: registry.cn-qingdao.aliyuncs.com/leon-pu/yipin-toolsite:latest
     build:
       context: .
       dockerfile: ToolSite/Dockerfile
