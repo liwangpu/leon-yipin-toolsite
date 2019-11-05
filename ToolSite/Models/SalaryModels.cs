@@ -265,6 +265,8 @@ namespace ToolSite.Models.Salary
 
     public class _配货绩效_本楼层乱单 : _配货绩效_乱单
     {
+        [ExcelColumn("拣货人")]
+        public string _拣货人 { get; set; }
         public override List<_配货绩效_拣货单> ToData()
         {
             var list = new List<_配货绩效_拣货单>();

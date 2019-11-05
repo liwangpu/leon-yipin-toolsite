@@ -430,7 +430,7 @@ namespace ToolSite.Controllers
             var dailyPerfFilePath = Path.Combine(tmpFolder, resultFileName);
             var list拣货单 = new List<_配货绩效_拣货单>();
             var list乱单 = new List<_配货绩效_乱单>();
-            var list本楼层乱单 = new List<_配货绩效_本楼层乱单>();
+            var list本楼层乱单原始数据 = new List<_配货绩效_本楼层乱单>();
             var list人员负责库位信息 = new List<_配货绩效_拣货人员配置信息>();
             var list最终绩效 = new List<_配货绩效_配货绩效结果>();
             var list本月上班时间 = new List<_配货绩效_员工月上班时间>();
@@ -466,7 +466,8 @@ namespace ToolSite.Controllers
                         //将乱单转换正常拣货单
                         foreach (var item乱单 in list乱单)
                         {
-                            //var aaa = item乱单.ToData();
+                            if (item乱单 == null || string.IsNullOrWhiteSpace(item乱单._商品明细) || string.IsNullOrWhiteSpace(item乱单._完整库位号))
+                                continue;
                             list拣货单.AddRange(item乱单.ToData());
                         }
                     }
@@ -482,12 +483,12 @@ namespace ToolSite.Controllers
                     using (var package = new ExcelPackage(new FileInfo(flowFilePath)))
                     {
                         var worksheet = package.Workbook.Worksheets[0];
-                        list本楼层乱单 = SheetReader<_配货绩效_本楼层乱单>.From(worksheet);
-                        //将乱单转换正常拣货单
-                        foreach (var item乱单 in list本楼层乱单)
-                        {
-                            list拣货单.AddRange(item乱单.ToData());
-                        }
+                        list本楼层乱单原始数据 = SheetReader<_配货绩效_本楼层乱单>.From(worksheet);
+                        ////将乱单转换正常拣货单
+                        //foreach (var item乱单 in list本楼层乱单)
+                        //{
+                        //    list拣货单.AddRange(item乱单.ToData());
+                        //}
                     }
                     System.IO.File.Delete(flowFilePath);
                 }
@@ -541,98 +542,124 @@ namespace ToolSite.Controllers
                 var allEmpNames = list人员负责库位信息.Select(x => x._姓名).Distinct().ToList();
                 allEmpNames.ForEach(name =>
                 {
-                    if (!string.IsNullOrEmpty(name))
+                    try
                     {
 
-                        //if (name.Trim()== "魏婷")
-                        //{
 
-                        //}
-                        var md = new _配货绩效_配货绩效结果();
-                        md._d张数占比 = paperRate;
-                        md._d张数定值 = paperAmount;
-                        md._d数量定值 = pickingAmount;
-                        md._d数量占比 = pickingRate;
-
-
-                        md._业绩归属人 = name;
-                        var _订单详情数据 = new List<_配货绩效_订单详情数据>();
-
-                        #region 抽取详细信息
+                        if (!string.IsNullOrEmpty(name))
                         {
-                            var refLh = (from it in list拣货单
-                                         join s in list人员负责库位信息 on it._库位号 equals s._管理库位
-                                         where s._姓名 == name
-                                         select it).ToList();
-                            foreach (var deitem in refLh)
+
+                            if (name.Trim() == "欧于书")
                             {
-                                var item = deitem._拣货明细;
-                                foreach (var it in item)
+
+                            }
+                            var md = new _配货绩效_配货绩效结果();
+                            md._d张数占比 = paperRate;
+                            md._d张数定值 = paperAmount;
+                            md._d数量定值 = pickingAmount;
+                            md._d数量占比 = pickingRate;
+
+
+                            md._业绩归属人 = name;
+                            var _订单详情数据 = new List<_配货绩效_订单详情数据>();
+
+                            #region 抽取详细信息
+                            {
+                                var query = from it in list拣货单
+                                            join s in list人员负责库位信息 on it._库位号 equals s._管理库位
+                                            where s._姓名 == name
+                                            select it;
+                                var refLh = query.ToList();
+                                //从本楼层原始数据抽出本楼层
+                                //因为本楼层是帮忙的数据,所以不按照拣货单的区域算绩效,用原始数据里面的配货人
                                 {
-                                    var arr = it.Replace(".", string.Empty).Split(new string[] { "*" }, StringSplitOptions.RemoveEmptyEntries);
-                                    if (arr.Length >= 2)
+                                    var ds = list本楼层乱单原始数据.Where(x => x._拣货人 == name).ToList();
+                                    //if (true)
+                                    //{
+
+                                    //}
+                                    ds.ForEach(it =>
                                     {
-                                        var detail = new _配货绩效_订单详情数据();
-                                        detail.SKU = arr[0].Trim();
-                                        detail.Amount = Convert.ToDouble(arr[1]);
-                                        detail._乱单 = deitem._乱单;
-                                        detail._本楼层 = deitem._本楼层;
-                                        _订单详情数据.Add(detail);
-                                    }
+                                        refLh.AddRange(it.ToData());
+                                    });
 
                                 }
-                            }
 
-                        }
-                        #endregion
-
-                        var list订单详情数据_拣货单 = _订单详情数据.Where(x => x._乱单 == false).ToList();
-                        var list订单详情数据_乱单 = _订单详情数据.Where(x => x._乱单 == true).ToList();
-                        var list订单详情数据_本楼层乱单 = _订单详情数据.Where(x => x._本楼层 == true).ToList();
-
-                        var str_帮忙总时长 = "";
-                        decimal refTime = 0;
-
-                        #region 计算上班时间和帮忙时间
-                        {
-                            var d绩效日期 = perfDate.Date;
-                            if (list本月上班时间 != null && list本月上班时间.Count > 0)
-                            {
-                                var refer工作时间 = list本月上班时间.Where(x => x._姓名 == name).FirstOrDefault();
-                                var refer帮忙时间 = list当天帮忙时间.Where(x => x._姓名 == name).FirstOrDefault();
-                                if (refer工作时间 != null)
+                                foreach (var deitem in refLh)
                                 {
-                                    decimal d上班时间 = 0;
-                                    decimal d帮忙时间 = 0;
-                                    if (refer帮忙时间 != null && refer帮忙时间._帮忙总时间 != null)
+                                    var item = deitem._拣货明细;
+                                    foreach (var it in item)
                                     {
-                                        var h = (refer帮忙时间._帮忙总时间).Hours;
-                                        var mh = Math.Round((refer帮忙时间._帮忙总时间).Minutes / 60m, 1);
-                                        d帮忙时间 = h + mh;
+                                        var arr = it.Replace(".", string.Empty).Split(new string[] { "*" }, StringSplitOptions.RemoveEmptyEntries);
+                                        if (arr.Length >= 2)
+                                        {
+                                            var detail = new _配货绩效_订单详情数据();
+                                            detail.SKU = arr[0].Trim();
+                                            detail.Amount = Convert.ToDouble(arr[1]);
+                                            detail._乱单 = deitem._乱单;
+                                            detail._本楼层 = deitem._本楼层;
+                                            _订单详情数据.Add(detail);
+                                        }
+
                                     }
-                                    str_帮忙总时长 = d帮忙时间.ToString();
-                                    d上班时间 = refer工作时间._工作时间[d绩效日期.Day - 1];
-                                    if (d上班时间 > 0)
-                                        refTime = d上班时间 - d帮忙时间;
+                                }
+
+                            }
+                            #endregion
+
+                            var list订单详情数据_拣货单 = _订单详情数据.Where(x => x._乱单 == false).ToList();
+                            var list订单详情数据_乱单 = _订单详情数据.Where(x => x._乱单 == true).ToList();
+                            var list订单详情数据_本楼层乱单 = _订单详情数据.Where(x => x._本楼层 == true).ToList();
+
+                            var str_帮忙总时长 = "";
+                            decimal refTime = 0;
+
+                            #region 计算上班时间和帮忙时间
+                            {
+                                var d绩效日期 = perfDate.Date;
+                                if (list本月上班时间 != null && list本月上班时间.Count > 0)
+                                {
+                                    var refer工作时间 = list本月上班时间.Where(x => x._姓名 == name).FirstOrDefault();
+                                    var refer帮忙时间 = list当天帮忙时间.Where(x => x._姓名 == name).FirstOrDefault();
+                                    if (refer工作时间 != null)
+                                    {
+                                        decimal d上班时间 = 0;
+                                        decimal d帮忙时间 = 0;
+                                        if (refer帮忙时间 != null && refer帮忙时间._帮忙总时间 != null)
+                                        {
+                                            var h = (refer帮忙时间._帮忙总时间).Hours;
+                                            var mh = Math.Round((refer帮忙时间._帮忙总时间).Minutes / 60m, 1);
+                                            d帮忙时间 = h + mh;
+                                        }
+                                        str_帮忙总时长 = d帮忙时间.ToString();
+                                        d上班时间 = refer工作时间._工作时间[d绩效日期.Day - 1];
+                                        if (d上班时间 > 0)
+                                            refTime = d上班时间 - d帮忙时间;
+                                    }
                                 }
                             }
+                            #endregion
+
+
+                            md._拣货单张数_正常 = list订单详情数据_拣货单.Select(x => x.SKU).Distinct().Count();
+                            md._购买总数量_正常 = list订单详情数据_拣货单.Select(x => x.Amount).Sum();
+                            md._拣货单张数_乱单 = list订单详情数据_乱单.Select(x => x.SKU).Distinct().Count();
+                            md._购买总数量_乱单 = list订单详情数据_乱单.Select(x => x.Amount).Sum();
+                            md._拣货单张数_本楼层乱单 = list订单详情数据_本楼层乱单.Select(x => x.SKU).Distinct().Count();
+                            md._购买总数量_本楼层乱单 = list订单详情数据_本楼层乱单.Select(x => x.Amount).Sum();
+
+                            md._总时长 = refTime.ToString();
+                            md._帮忙总时长 = str_帮忙总时长;
+                            md._分钟 = Convert.ToDouble(refTime * 60);
+
+
+                            list最终绩效.Add(md);
                         }
-                        #endregion
+                    }
+                    catch (Exception ex)
+                    {
 
-
-                        md._拣货单张数_正常 = list订单详情数据_拣货单.Select(x => x.SKU).Distinct().Count();
-                        md._购买总数量_正常 = list订单详情数据_拣货单.Select(x => x.Amount).Sum();
-                        md._拣货单张数_乱单 = list订单详情数据_乱单.Select(x => x.SKU).Distinct().Count();
-                        md._购买总数量_乱单 = list订单详情数据_乱单.Select(x => x.Amount).Sum();
-                        md._拣货单张数_本楼层乱单 = list订单详情数据_本楼层乱单.Select(x => x.SKU).Distinct().Count();
-                        md._购买总数量_本楼层乱单 = list订单详情数据_本楼层乱单.Select(x => x.Amount).Sum();
-
-                        md._总时长 = refTime.ToString();
-                        md._帮忙总时长 = str_帮忙总时长;
-                        md._分钟 = Convert.ToDouble(refTime * 60);
-
-
-                        list最终绩效.Add(md);
+                        throw;
                     }
                 });
 
