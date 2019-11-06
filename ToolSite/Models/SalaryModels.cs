@@ -204,6 +204,8 @@ namespace ToolSite.Models.Salary
         {
             get
             {
+                if (string.IsNullOrWhiteSpace(_完整库位号))
+                    return null;
                 var arr = _完整库位号.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
                 if (arr.Count() > 0)
                 {
