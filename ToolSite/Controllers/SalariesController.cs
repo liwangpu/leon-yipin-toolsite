@@ -73,9 +73,9 @@ namespace ToolSite.Controllers
                 {
                     var md = new _仓库加班考勤数据();
                     md._姓名 = worksheet.Cells[idx, 1].Value.ToString();
-                    md._员工序号 = Convert.ToInt32(worksheet.Cells[idx, 3].Value);
+                    md._员工序号 = Convert.ToInt32(worksheet.Cells[idx, 4].Value);
                     var list = new List<string>();
-                    for (int cll = 6; cll <= endColumn; cll++)
+                    for (int cll = 7; cll <= endColumn; cll++)
                     {
                         var vl = worksheet.Cells[idx, cll].Value != null ? worksheet.Cells[idx, cll].Value.ToString().Trim().Replace("\r\n", "").Replace(" ", "") : "";
                         list.Add(vl);
