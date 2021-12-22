@@ -1,0 +1,59 @@
+﻿
+@{
+    ViewBag.Title = "性状数据处理";
+    Layout = "~/Views/Shared/_MetadataUpload.cshtml";
+}
+
+@section styles{
+
+}
+
+@section scripts{
+    <script>
+        require(["dojo/ready", "dijit/registry", "dojo/request/iframe", "dojo/on", "dojo/dom", "dojo/topic"], function (ready, registry, iframe, on, dom, topic) {
+            ready(function () {
+                registry.byId("btnDataProcess").on("click", processData);
+                on(dom.byId("nav"), "click", function () { location.href = "/"; });
+            });//ready
+
+            function processData() {
+                var wform = registry.byId("uploadBoxForm");
+                var valid = wform.validate();
+                if (!valid) return;
+                topic.publish("DataProcessing");
+                iframe("/Accountant/ProcessOtherData", {
+                    form: "uploadBoxForm"
+                }).then(function (path) {
+                    topic.publish("DownloadProcessExel", path);
+                    topic.publish("DataProcessCompleted");
+                }, function (err) {
+                    topic.publish("DataProcessCompleted");
+                    topic.publish("ReportErrorMessage", err);
+                });
+            }//splitData
+
+        });//require
+    </script>
+}
+
+
+@section uploadbox{
+    <form method="post" enctype="multipart/form-data" data-dojo-type="dijit/form/Form" id="uploadBoxForm">
+        <div class="form-item required">
+            <label for="split">表格</label>
+            <div data-dojo-type="mytool/multipleUploader" data-dojo-props="name:'split',accept:'.xlsx',required:true"></div>
+        </div>
+        <button data-dojo-type="dijit/form/Button" id="btnDataProcess">数据处理</button>
+    </form>
+}
+
+@section custom{
+
+}
+
+@section description{
+    <h4>使用说明:</h4>
+    <p class="des">附件需要上传xlsx格式表格"</p>
+    @*<p class="des">性状名称列可以根据需要自己修改,默认是"主花序角果数"</p>
+        <p class="des warn">性状列前面一列一定是代号列,可以有很多组(代号列可以不起名字)</p>*@
+}

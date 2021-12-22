@@ -1,8 +1,8 @@
-div.mytool-singleUploader {
+div.mytool-multipleUploader {
     display: inline-block;
 }
 
-div.mytool-singleUploader input[type="text"] {
+div.mytool-multipleUploader input[type="text"] {
     width: 100%;
     min-width: 240px;
     font: inherit;
@@ -16,20 +16,20 @@ div.mytool-singleUploader input[type="text"] {
     outline: none;
 }
 
-div.mytool-singleUploader input[type="text"].required {
+div.mytool-multipleUploader input[type="text"].required {
     border-color: #d46464;
 }
 
-div.mytool-singleUploader input[type="text"].required::placeholder {
+div.mytool-multipleUploader input[type="text"].required::placeholder {
     color: #d46464;
 }
 
-div.mytool-singleUploader input[type="text"]:hover {
+div.mytool-multipleUploader input[type="text"]:hover {
     border-color: #759dc0;
     background-color: #e5f2fe;
     cursor: pointer;
 }
 
-div.mytool-singleUploader input[type="file"] {
+div.mytool-multipleUploader input[type="file"] {
     display: none;
 }
