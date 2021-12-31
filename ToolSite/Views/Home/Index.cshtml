@@ -1,74 +1,101 @@
-﻿@{
-    ViewBag.Title = "亿品小助手";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
+﻿@{ ViewBag.Title = "数据处理小助手";
+    Layout = "~/Views/Shared/_Layout.cshtml"; }
 
 @section styles{
     <style>
         div.page {
-            padding: 1rem;
-        }
-
-        table.tool {
+            display: flex;
             width: 100%;
-            border-collapse: collapse;
+            height: 100%;
+            flex-flow: column;
+            padding: 1rem 1rem 4px;
         }
 
-            table.tool th:first-of-type {
-                width: 300px;
+        div.content {
+            flex: 1;
+        }
+
+            div.content table.tool {
+                width: 100%;
+                border-collapse: collapse;
             }
 
-            table.tool th, td {
-                border: 1px solid #d0d0d0;
-                padding: .3rem;
-            }
+                div.content table.tool th:first-of-type {
+                    width: 300px;
+                }
+
+                div.content table.tool th, td {
+                    border: 1px solid #d0d0d0;
+                    padding: .3rem;
+                }
 
         p.helpTip {
-            text-align: right;
             padding-bottom: .3rem;
             color: gray;
         }
+
+        div.footer {
+            display: flex;
+            justify-content: center;
+        }
+
+            div.footer a.link {
+                color: #939393;
+                text-decoration: none;
+                font-size: 14px;
+            }
+
+                div.footer a.link:hover {
+                    color: #222;
+                }
+
+                div.footer a.link:not(last-of-type) {
+                    margin-left: 20px;
+                }
     </style>
 }
 
 <div class="page">
-    <p class="helpTip">如果您在小工具使用过程中有疑问或需要帮助,请电联:15721457986或邮件:liwang.pu@gmail.com  ☺</p>
-    <table class="tool">
-        <thead>
-            <tr>
-                <th>小工具</th>
-                <th>描述</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><a href="/Orders/ExtractArea">订单流水按区域提取</a></td>
-                <td>
-                    针对"网店精灵"软件中"带包装订单"中"未拣货"导出的订单流水表格进行按区域分表，分表的原则为库位号区域信息都为同一个区域的，就划分到一张表。例如："A00R04-L4-02;A00R05-L4-01;A01R05-L4-05;"，该库位号中的首字母为区域信息，都为A,则划分到"A区域"表，如果有一个不是A区域的，则不进行划分
-                </td>
-            </tr>
-            <tr>
-                <td><a href="/Salaries/WarehouseOvertime">仓库加班考勤统计</a></td>
-                <td>
-                    针对公司考勤软件中导出的打卡详情表格进行加班时间统计，具体统计方式此处不做说明
-                </td>
-            </tr>
-            <tr>
-                <td><a href="/Salaries/PickingPerf">配货绩效</a></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td><a href="/Laboratory/InflorescenceSplit">性状数据处理</a></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td><a href="/Accountant/Other">国家高新技术产业开发区/其他</a></td>
-                <td></td>
-            </tr>
-            @*<tr>
-            <td><a href="/Warehouses/StockTaking">库存盘点</a></td>
-            <td></td>
-        </tr>*@
-        </tbody>
-    </table>
+    <p class="helpTip">表格数据处理小工具</p>
+    <div class="content">
+        <table class="tool">
+            <thead>
+                <tr>
+                    <th>小工具</th>
+                    <th>描述</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><a href="/Orders/ExtractArea">订单流水按区域提取</a></td>
+                    <td>
+                        针对"网店精灵"软件中"带包装订单"中"未拣货"导出的订单流水表格进行按区域分表，分表的原则为库位号区域信息都为同一个区域的，就划分到一张表。例如："A00R04-L4-02;A00R05-L4-01;A01R05-L4-05;"，该库位号中的首字母为区域信息，都为A,则划分到"A区域"表，如果有一个不是A区域的，则不进行划分
+                    </td>
+                </tr>
+                <tr>
+                    <td><a href="/Salaries/WarehouseOvertime">仓库加班考勤统计</a></td>
+                    <td>
+                        针对考勤软件中导出的打卡详情表格进行加班时间统计，具体统计方式此处不做说明
+                    </td>
+                </tr>
+                <tr>
+                    <td><a href="/Salaries/PickingPerf">配货绩效</a></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><a href="/Laboratory/InflorescenceSplit">性状数据处理</a></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="footer">
+        <a class="link" target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011302006961">
+            沪公网安备 31011302006961号
+        </a>
+        <a class="link" target="_blank" href="https://beian.miit.gov.cn">
+            沪ICP备2021036638号-1
+        </a>
+
+    </div>
 </div>
